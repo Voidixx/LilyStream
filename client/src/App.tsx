@@ -16,6 +16,14 @@ import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 import WatchHistory from "@/pages/WatchHistory";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import About from "@/pages/About";
+import Careers from "@/pages/Careers";
+import Press from "@/pages/Press";
+import Blog from "@/pages/Blog";
+import Guidelines from "@/pages/Guidelines";
+import Copyright from "@/pages/Copyright";
+import Help from "@/pages/Help";
+import Contact from "@/pages/Contact";
 import EditProfile from "@/pages/EditProfile";
 import NotFound from "@/pages/not-found";
 
@@ -34,6 +42,14 @@ function Router() {
       <Route path="/history" component={WatchHistory} />
       <Route path="/terms" component={TermsOfService} />
       <Route path="/privacy" component={PrivacyPolicy} />
+      <Route path="/about" component={About} />
+      <Route path="/careers" component={Careers} />
+      <Route path="/press" component={Press} />
+      <Route path="/blog" component={Blog} />
+      <Route path="/guidelines" component={Guidelines} />
+      <Route path="/copyright" component={Copyright} />
+      <Route path="/help" component={Help} />
+      <Route path="/contact" component={Contact} />
       <Route path="/edit-profile" component={EditProfile} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/trending" component={Home} />

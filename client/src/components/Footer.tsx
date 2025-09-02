@@ -37,18 +37,18 @@ export default function Footer() {
     <footer className="bg-muted/30 border-t border-border mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-8">
           {/* Brand Section */}
-          <div className="lg:col-span-1">
+          <div className="col-span-2 md:col-span-1 lg:col-span-1">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
-                <Heart className="w-4 h-4 text-white" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
+                <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
               </div>
-              <span className="text-lg font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              <span className="text-base sm:text-lg font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                 LilyTube
               </span>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-xs sm:text-sm text-muted-foreground mb-4">
               The future of video sharing. Built for creators, designed for everyone.
             </p>
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
@@ -59,14 +59,14 @@ export default function Footer() {
 
           {/* Footer Links */}
           {Object.entries(footerLinks).map(([category, links]) => (
-            <div key={category}>
-              <h4 className="font-semibold text-foreground mb-4">{category}</h4>
-              <ul className="space-y-2">
+            <div key={category} className="min-w-0">
+              <h4 className="font-semibold text-foreground mb-3 sm:mb-4 text-sm sm:text-base">{category}</h4>
+              <ul className="space-y-1 sm:space-y-2">
                 {links.map((link) => (
                   <li key={link.name}>
                     <button
                       onClick={() => setLocation(link.href)}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors text-left"
                     >
                       {link.name}
                     </button>
@@ -81,43 +81,43 @@ export default function Footer() {
         <div className="border-t border-border my-8"></div>
 
         {/* Bottom Section */}
-        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-            <span>© {currentYear} LilyTube. All rights reserved.</span>
+        <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+          <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6 text-xs sm:text-sm text-muted-foreground">
+            <span className="text-center sm:text-left">© {currentYear} LilyTube. All rights reserved.</span>
             <div className="flex items-center space-x-1">
               <Shield className="w-3 h-3" />
               <span>Secure Platform</span>
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 sm:space-x-4">
             <button
               onClick={() => setLocation('/terms')}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center space-x-1"
             >
               <FileText className="w-3 h-3" />
-              <span>Terms</span>
+              <span className="hidden sm:inline">Terms</span>
             </button>
             <button
               onClick={() => setLocation('/privacy')}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center space-x-1"
             >
               <Shield className="w-3 h-3" />
-              <span>Privacy</span>
+              <span className="hidden sm:inline">Privacy</span>
             </button>
             <button
               onClick={() => setLocation('/help')}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center space-x-1"
             >
               <HelpCircle className="w-3 h-3" />
-              <span>Help</span>
+              <span className="hidden sm:inline">Help</span>
             </button>
             <button
               onClick={() => setLocation('/contact')}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center space-x-1"
             >
               <Mail className="w-3 h-3" />
-              <span>Contact</span>
+              <span className="hidden sm:inline">Contact</span>
             </button>
           </div>
         </div>

@@ -27,7 +27,7 @@ export default function NavigationHeader({ onSearch }: NavigationHeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const { currentPrompt, showPrompt, hidePrompt } = useGuestPrompt();
-  
+
   const handleFeatureClick = (feature: "upload" | "like" | "comment" | "subscribe" | "save" | "history", action: () => void) => {
     if (user) {
       action();
@@ -39,12 +39,12 @@ export default function NavigationHeader({ onSearch }: NavigationHeaderProps) {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-    
+
     if (onSearch) {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
-      
+
       searchTimeoutRef.current = setTimeout(() => {
         onSearch(value);
       }, 300);
@@ -60,40 +60,40 @@ export default function NavigationHeader({ onSearch }: NavigationHeaderProps) {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 nav-blur border-b border-border bg-background/95 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 flex-1">
             <button
               onClick={() => setLocation('/')}
-              className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+              className="flex items-center space-x-1 sm:space-x-2 hover:opacity-80 transition-opacity"
               data-testid="logo-button"
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
-                <Play className="w-5 h-5 text-white" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
+                <Play className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                 LilyTube
               </span>
             </button>
           </div>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-2xl mx-8">
+          <div className="flex-1 max-w-xl sm:max-w-2xl mx-2 sm:mx-auto">
             <form onSubmit={handleSearchSubmit} className="relative">
               <Input
                 type="text"
                 placeholder="Search videos..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className="w-full pl-10 pr-12 bg-muted border-border focus:ring-2 focus:ring-primary focus:border-transparent rounded-full"
+                className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 text-sm sm:text-base border-border focus:ring-2 focus:ring-primary focus:border-transparent rounded-full"
                 data-testid="search-input"
               />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Button
                 type="submit"
                 size="sm"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary text-primary-foreground p-2 rounded-full hover:bg-primary/90"
+                className="absolute right-1.5 top-1/2 transform -translate-y-1/2 bg-primary text-primary-foreground p-2 rounded-full hover:bg-primary/90"
                 data-testid="search-button"
               >
                 <Search className="w-3 h-3" />
@@ -257,7 +257,7 @@ export default function NavigationHeader({ onSearch }: NavigationHeaderProps) {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                
+
                 <Button
                   variant="outline"
                   onClick={() => setLocation('/auth')}
