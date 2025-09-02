@@ -21,7 +21,7 @@ interface NavigationHeaderProps {
   onSearch?: (query: string) => void;
 }
 
-export default function NavigationHeader({ onSearch }: NavigationHeaderProps) {
+export function NavigationHeader({ onSearch }: NavigationHeaderProps) {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();

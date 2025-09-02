@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import NavigationHeader from "@/components/NavigationHeader";
+import { NavigationHeader } from "@/components/NavigationHeader";
 import UploadForm from "@/components/UploadForm";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";

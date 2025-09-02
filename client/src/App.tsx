@@ -30,6 +30,7 @@ import Safety from "@/pages/Safety";
 import Studio from "@/pages/Studio";
 import Live from "@/pages/Live";
 import ApiDocs from "@/pages/ApiDocs";
+import { NavigationHeader } from "@/components/NavigationHeader";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -74,6 +75,7 @@ function App() {
       <ThemeProvider>
         <TooltipProvider>
           <Toaster />
+          <NavigationHeader />
           <Router />
         </TooltipProvider>
       </ThemeProvider>
