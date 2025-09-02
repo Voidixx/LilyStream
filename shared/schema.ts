@@ -125,6 +125,15 @@ export const likes = pgTable("likes", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Subscriptions table
+export const subscriptions = pgTable("subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  subscriberId: varchar("subscriber_id").references(() => users.id).notNull(),
+  channelId: varchar("channel_id").references(() => users.id).notNull(),
+  notificationsEnabled: boolean("notifications_enabled").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Playlists table
 export const playlists = pgTable("playlists", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -132,6 +141,8 @@ export const playlists = pgTable("playlists", {
   description: text("description"),
   thumbnailUrl: varchar("thumbnail_url"),
   privacy: varchar("privacy", { enum: ["public", "unlisted", "private"] }).default("public"),
+  videoCount: integer("video_count").default(0),
+  views: integer("views").default(0),
   userId: varchar("user_id").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -143,52 +154,75 @@ export const playlistVideos = pgTable("playlist_videos", {
   playlistId: varchar("playlist_id").references(() => playlists.id).notNull(),
   videoId: varchar("video_id").references(() => videos.id).notNull(),
   position: integer("position").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  addedAt: timestamp("added_at").defaultNow(),
 });
 
-// Video progress tracking
+// Watch history table
+export const watchHistory = pgTable("watch_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  videoId: varchar("video_id").references(() => videos.id).notNull(),
+  watchedAt: timestamp("watched_at").defaultNow(),
+  watchDuration: integer("watch_duration").default(0), // seconds watched
+  completed: boolean("completed").default(false),
+});
+
+// Video progress table for resume watching
 export const videoProgress = pgTable("video_progress", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
   videoId: varchar("video_id").references(() => videos.id).notNull(),
-  progress: integer("progress").default(0), // in seconds
-  completed: boolean("completed").default(false),
+  currentTime: integer("current_time").default(0), // seconds
+  percentage: integer("percentage").default(0), // 0-100
   updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Subscriptions table
-export const subscriptions = pgTable("subscriptions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  subscriberId: varchar("subscriber_id").references(() => users.id).notNull(),
-  channelId: varchar("channel_id").references(() => users.id).notNull(),
-  notificationsEnabled: boolean("notifications_enabled").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Notifications table
 export const notifications = pgTable("notifications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  type: varchar("type", { enum: ["new_video", "like", "comment", "subscribe", "mention"] }).notNull(),
+  type: varchar("type", { 
+    enum: ["new_video", "new_subscriber", "comment", "like", "mention", "system"] 
+  }).notNull(),
   title: text("title").notNull(),
   message: text("message").notNull(),
+  actionUrl: varchar("action_url"),
   isRead: boolean("is_read").default(false),
-  relatedVideoId: varchar("related_video_id").references(() => videos.id),
-  relatedUserId: varchar("related_user_id").references(() => users.id),
+  data: jsonb("data"), // additional data as JSON
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Upload sessions for progress tracking
-export const uploadSessions = pgTable("upload_sessions", {
+// Reports table for content moderation
+export const reports = pgTable("reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reporterId: varchar("reporter_id").references(() => users.id).notNull(),
+  reportedUserId: varchar("reported_user_id").references(() => users.id),
+  videoId: varchar("video_id").references(() => videos.id),
+  commentId: varchar("comment_id").references(() => comments.id),
+  reason: varchar("reason", {
+    enum: ["spam", "harassment", "hate_speech", "misinformation", "copyright", "inappropriate", "other"]
+  }).notNull(),
+  description: text("description"),
+  status: varchar("status", { enum: ["pending", "reviewed", "resolved", "dismissed"] }).default("pending"),
+  moderatorId: varchar("moderator_id").references(() => users.id),
+  moderatorNotes: text("moderator_notes"),
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User settings table
+export const userSettings = pgTable("user_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  filename: varchar("filename").notNull(),
-  fileSize: integer("file_size").notNull(),
-  uploadedBytes: integer("uploaded_bytes").default(0),
-  status: varchar("status", { enum: ["uploading", "processing", "completed", "failed"] }).default("uploading"),
-  estimatedTimeRemaining: integer("estimated_time_remaining"), // in seconds
-  uploadSpeed: integer("upload_speed"), // bytes per second
-  type: varchar("type", { enum: ["video", "thumbnail"] }).notNull(),
+  emailNotifications: boolean("email_notifications").default(true),
+  pushNotifications: boolean("push_notifications").default(true),
+  privacyLevel: varchar("privacy_level", { enum: ["public", "friends", "private"] }).default("public"),
+  showWatchHistory: boolean("show_watch_history").default(true),
+  showSubscriptions: boolean("show_subscriptions").default(true),
+  autoplay: boolean("autoplay").default(true),
+  quality: varchar("quality", { enum: ["auto", "144p", "240p", "360p", "480p", "720p", "1080p"] }).default("auto"),
+  theme: varchar("theme", { enum: ["light", "dark", "auto"] }).default("auto"),
+  language: varchar("language").default("en"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -271,20 +305,12 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
   createdAt: true,
 });
 
-export const insertUploadSessionSchema = createInsertSchema(uploadSessions).omit({
+export const insertPlaylistSchema = createInsertSchema(playlists).omit({
   id: true,
+  videoCount: true,
+  views: true,
   createdAt: true,
   updatedAt: true,
-});
-
-export const insertAlgorithmDataSchema = createInsertSchema(algorithmData).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertCategorySchema = createInsertSchema(categories).omit({
-  id: true,
-  createdAt: true,
 });
 
 export const insertCommentSchema = createInsertSchema(comments).omit({
@@ -295,27 +321,47 @@ export const insertCommentSchema = createInsertSchema(comments).omit({
   updatedAt: true,
 });
 
-export const insertPlaylistSchema = createInsertSchema(playlists).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-// Types
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type LoginUser = z.infer<typeof loginUserSchema>;
-export type RegisterUser = z.infer<typeof registerUserSchema>;
+// Type exports
 export type User = typeof users.$inferSelect;
-export type InsertVideo = z.infer<typeof insertVideoSchema>;
+export type InsertUser = typeof users.$inferInsert;
+export type RegisterUser = z.infer<typeof registerUserSchema>;
+export type LoginUser = z.infer<typeof loginUserSchema>;
+
 export type Video = typeof videos.$inferSelect;
-export type InsertComment = z.infer<typeof insertCommentSchema>;
+export type InsertVideo = typeof videos.$inferInsert;
+
 export type Comment = typeof comments.$inferSelect;
-export type InsertPlaylist = z.infer<typeof insertPlaylistSchema>;
-export type Playlist = typeof playlists.$inferSelect;
+export type InsertComment = typeof comments.$inferInsert;
+
 export type Like = typeof likes.$inferSelect;
-export type VideoProgress = typeof videoProgress.$inferSelect;
+export type InsertLike = typeof likes.$inferInsert;
+
 export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertSubscription = typeof subscriptions.$inferInsert;
+
+export type Playlist = typeof playlists.$inferSelect;
+export type InsertPlaylist = typeof playlists.$inferInsert;
+
+export type PlaylistVideo = typeof playlistVideos.$inferSelect;
+export type InsertPlaylistVideo = typeof playlistVideos.$inferInsert;
+
+export type VideoProgress = typeof videoProgress.$inferSelect;
+export type InsertVideoProgress = typeof videoProgress.$inferInsert;
+
 export type Notification = typeof notifications.$inferSelect;
-export type UploadSession = typeof uploadSessions.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
+
+export type Report = typeof reports.$inferSelect;
+export type InsertReport = typeof reports.$inferInsert;
+
+export type UserSettings = typeof userSettings.$inferSelect;
+export type InsertUserSettings = typeof userSettings.$inferInsert;
+
+export type WatchHistory = typeof watchHistory.$inferSelect;
+export type InsertWatchHistory = typeof watchHistory.$inferInsert;
+
 export type AlgorithmData = typeof algorithmData.$inferSelect;
+export type InsertAlgorithmData = typeof algorithmData.$inferInsert;
+
 export type Category = typeof categories.$inferSelect;
+export type InsertCategory = typeof categories.$inferInsert;
