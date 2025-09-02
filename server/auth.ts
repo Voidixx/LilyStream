@@ -4,9 +4,9 @@ import { Express } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import { storage } from "./storage";
+import { jsonStorage as storage } from "./jsonStorage";
 import { User, RegisterUser, LoginUser, registerUserSchema, loginUserSchema } from "@shared/schema";
-import connectPg from "connect-pg-simple";
+import MemoryStore from "memorystore";
 
 declare global {
   namespace Express {
@@ -30,14 +30,11 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 }
 
 export function setupAuth(app: Express) {
-  // Session configuration
+  // Session configuration with memory store for JSON database
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  const pgStore = connectPg(session);
-  const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
-    ttl: sessionTtl,
-    tableName: "sessions",
+  const memoryStore = MemoryStore(session);
+  const sessionStore = new memoryStore({
+    checkPeriod: 86400000, // prune expired entries every 24h
   });
   
   const sessionSecret = process.env.SESSION_SECRET || 
@@ -65,7 +62,7 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        if (!user || !(await storage.comparePasswords(password, user.password))) {
           return done(null, false, { message: "Invalid username or password" });
         }
         return done(null, user);
@@ -106,12 +103,11 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Email already registered" });
       }
 
-      // Create new user
-      const hashedPassword = await hashPassword(password);
+      // Create new user (password hashing is done in storage)
       const user = await storage.createUser({
         username,
         email,
-        password: hashedPassword,
+        password,
         ...otherData,
       });
 

@@ -1,0 +1,70 @@
+{
+  "users": [],
+  "videos": [],
+  "comments": [],
+  "likes": [],
+  "subscriptions": [],
+  "notifications": [],
+  "reports": [],
+  "userSettings": [],
+  "watchHistory": [],
+  "algorithmData": [],
+  "categories": [
+    {
+      "id": "ei_WG8olnv8HOb6zaOaE5",
+      "name": "Gaming",
+      "description": "Gaming content",
+      "color": "#8b5cf6",
+      "icon": "gamepad-2",
+      "isActive": true,
+      "createdAt": "2025-09-02T04:59:52.305Z"
+    },
+    {
+      "id": "0fSWsL0zSWDJLDT9TDqrX",
+      "name": "Music",
+      "description": "Music and audio content",
+      "color": "#ec4899",
+      "icon": "music",
+      "isActive": true,
+      "createdAt": "2025-09-02T04:59:52.305Z"
+    },
+    {
+      "id": "wsz5quuEwjvTT2CSc-Gou",
+      "name": "Education",
+      "description": "Educational content",
+      "color": "#3b82f6",
+      "icon": "graduation-cap",
+      "isActive": true,
+      "createdAt": "2025-09-02T04:59:52.305Z"
+    },
+    {
+      "id": "NqLeOp0HPkj717Y9_0Pcg",
+      "name": "Technology",
+      "description": "Tech and programming",
+      "color": "#10b981",
+      "icon": "laptop",
+      "isActive": true,
+      "createdAt": "2025-09-02T04:59:52.305Z"
+    },
+    {
+      "id": "ZSK9Fhw7ykWkcxIy7aJ5d",
+      "name": "Travel",
+      "description": "Travel and adventure",
+      "color": "#06b6d4",
+      "icon": "plane",
+      "isActive": true,
+      "createdAt": "2025-09-02T04:59:52.305Z"
+    },
+    {
+      "id": "orHpKojdYOBKGbNj5wUNc",
+      "name": "Cooking",
+      "description": "Cooking and food",
+      "color": "#f97316",
+      "icon": "chef-hat",
+      "isActive": true,
+      "createdAt": "2025-09-02T04:59:52.305Z"
+    }
+  ],
+  "playlists": [],
+  "videoProgress": []
+}

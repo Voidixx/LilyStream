@@ -143,9 +143,9 @@ export default function Home() {
               <div className="flex items-center space-x-2 sm:space-x-4">
                 {!user && (
                   <Button 
-                    variant="outline" 
+                    variant="secondary" 
                     size="sm" 
-                    className="border-white/20 text-white hover:bg-white/10"
+                    className="bg-white/90 dark:bg-white/10 text-purple-700 dark:text-white border-white/30 hover:bg-white dark:hover:bg-white/20 font-medium shadow-lg backdrop-blur-sm"
                     onClick={() => setLocation('/auth')}
                     data-testid="quick-login-button"
                   >

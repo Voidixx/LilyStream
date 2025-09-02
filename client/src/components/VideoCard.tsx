@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Eye, Clock, Edit, Trash } from "lucide-react";
+import FollowButton from "./FollowButton";
 
 interface VideoCardProps {
   video: any;
@@ -121,19 +122,29 @@ export default function VideoCard({ video, showOptions = false }: VideoCardProps
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Avatar className="w-6 h-6">
-            <AvatarImage src={video.user?.profileImageUrl} />
-            <AvatarFallback className="text-xs">
-              {video.user?.firstName?.[0] || 'U'}
-            </AvatarFallback>
-          </Avatar>
-          <span className="text-xs text-muted-foreground truncate" data-testid="channel-name">
-            {video.user?.firstName && video.user?.lastName
-              ? `${video.user.firstName} ${video.user.lastName}`
-              : 'Unknown User'
-            }
-          </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Avatar className="w-6 h-6">
+              <AvatarImage src={video.user?.profileImageUrl} />
+              <AvatarFallback className="text-xs">
+                {video.user?.firstName?.[0] || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-xs text-muted-foreground truncate" data-testid="channel-name">
+              {video.user?.firstName && video.user?.lastName
+                ? `${video.user.firstName} ${video.user.lastName}`
+                : 'Unknown User'
+              }
+            </span>
+          </div>
+          <div onClick={(e) => e.stopPropagation()}>
+            <FollowButton 
+              channelId={video.userId} 
+              subscriberCount={video.user?.subscriberCount}
+              size="sm"
+              showCount={false}
+            />
+          </div>
         </div>
       </div>
     </Card>

@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Play, Search, Plus, Bell, Moon, Sun, User, Upload, LogOut, Menu } from "lucide-react";
+import { Play, Search, Plus, Bell, Moon, Sun, User, Upload, LogOut, Menu, BarChart3 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/ThemeProvider";
 import { GuestPrompt, useGuestPrompt } from "./GuestPrompt";
@@ -203,6 +203,13 @@ export default function NavigationHeader({ onSearch }: NavigationHeaderProps) {
                   >
                     <Play className="mr-2 h-4 w-4" />
                     Watch History
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setLocation('/analytics')}
+                    data-testid="analytics-menu-item"
+                  >
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    Analytics
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 

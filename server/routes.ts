@@ -5,7 +5,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { storage } from "./storage";
+import { jsonStorage as storage } from "./jsonStorage";
 import { setupAuth, requireAuth } from "./auth";
 import { insertVideoSchema, insertCommentSchema, insertPlaylistSchema, User } from "@shared/schema";
 
@@ -655,6 +655,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating playlist:", error);
       res.status(500).json({ message: "Failed to create playlist" });
+    }
+  });
+
+  // Subscription routes
+  app.post('/api/users/:channelId/subscribe', requireAuth, async (req: any, res) => {
+    try {
+      const subscriberId = req.user.id;
+      const { channelId } = req.params;
+      
+      if (subscriberId === channelId) {
+        return res.status(400).json({ message: "Cannot subscribe to yourself" });
+      }
+      
+      await storage.subscribe(subscriberId, channelId);
+      res.json({ message: "Subscribed successfully" });
+    } catch (error) {
+      console.error("Error subscribing:", error);
+      res.status(500).json({ message: "Failed to subscribe" });
+    }
+  });
+
+  app.post('/api/users/:channelId/unsubscribe', requireAuth, async (req: any, res) => {
+    try {
+      const subscriberId = req.user.id;
+      const { channelId } = req.params;
+      
+      await storage.unsubscribe(subscriberId, channelId);
+      res.json({ message: "Unsubscribed successfully" });
+    } catch (error) {
+      console.error("Error unsubscribing:", error);
+      res.status(500).json({ message: "Failed to unsubscribe" });
+    }
+  });
+
+  app.get('/api/users/:channelId/subscription-status', requireAuth, async (req: any, res) => {
+    try {
+      const subscriberId = req.user.id;
+      const { channelId } = req.params;
+      
+      const isSubscribed = await storage.isSubscribed(subscriberId, channelId);
+      res.json({ isSubscribed });
+    } catch (error) {
+      console.error("Error checking subscription status:", error);
+      res.status(500).json({ message: "Failed to check subscription status" });
+    }
+  });
+
+  app.get('/api/users/:userId/subscriptions', requireAuth, async (req: any, res) => {
+    try {
+      const subscriptions = await storage.getSubscriptions(req.params.userId);
+      
+      // Add user info to subscriptions
+      const subscriptionsWithUsers = await Promise.all(subscriptions.map(async (sub) => {
+        const user = await storage.getUser(sub.channelId);
+        return {
+          ...sub,
+          channel: user ? {
+            id: user.id,
+            username: user.username,
+            displayName: user.displayName,
+            profileImageUrl: user.profileImageUrl,
+            subscriberCount: user.subscriberCount,
+          } : null,
+        };
+      }));
+      
+      res.json(subscriptionsWithUsers);
+    } catch (error) {
+      console.error("Error fetching subscriptions:", error);
+      res.status(500).json({ message: "Failed to fetch subscriptions" });
+    }
+  });
+
+  // Advanced analytics route
+  app.get('/api/analytics/advanced/:userId', requireAuth, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const requestingUserId = req.user.id;
+      
+      // Only allow users to view their own analytics
+      if (userId !== requestingUserId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const analytics = await storage.getAdvancedAnalytics(userId);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching advanced analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
     }
   });
 

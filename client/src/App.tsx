@@ -6,11 +6,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/Landing";
-import Auth from "@/pages/Auth";
+import AuthPage from "@/pages/AuthPage";
 import Home from "@/pages/Home";
 import Watch from "@/pages/Watch";
 import Upload from "@/pages/Upload";
 import Profile from "@/pages/Profile";
+import AnalyticsDashboard from "@/pages/AnalyticsDashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,7 +24,8 @@ function Router() {
       <Route path="/watch/:id" component={Watch} />
       <Route path="/upload" component={Upload} />
       <Route path="/profile/:username?" component={Profile} />
-      <Route path="/auth" component={Auth} />
+      <Route path="/analytics" component={AnalyticsDashboard} />
+      <Route path="/auth" component={AuthPage} />
       <Route path="/trending" component={Home} />
       <Route path="/search" component={Home} />
       <Route path="/category/:category" component={Home} />
