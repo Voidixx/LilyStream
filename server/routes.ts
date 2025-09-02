@@ -225,6 +225,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/admin/users/:id/verify', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { verificationType } = req.body;
+      
+      if (!["none", "verified", "music", "government", "business"].includes(verificationType)) {
+        return res.status(400).json({ message: "Invalid verification type" });
+      }
+      
+      const success = await storage.setVerificationType(id, verificationType);
+      if (success) {
+        res.json({ message: "User verification updated successfully" });
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      console.error("Error updating user verification:", error);
+      res.status(500).json({ message: "Failed to update verification" });
+    }
+  });
+
   // Scheduled videos routes
   app.get('/api/videos/scheduled', requireAuth, async (req: any, res) => {
     try {

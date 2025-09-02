@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -15,6 +16,14 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        verified:
+          "border-transparent bg-blue-500 text-white hover:bg-blue-600",
+        music:
+          "border-transparent bg-purple-500 text-white hover:bg-purple-600",
+        government:
+          "border-transparent bg-green-600 text-white hover:bg-green-700",
+        business:
+          "border-transparent bg-orange-500 text-white hover:bg-orange-600",
       },
     },
     defaultVariants: {
@@ -34,3 +43,37 @@ function Badge({ className, variant, ...props }: BadgeProps) {
 }
 
 export { Badge, badgeVariants }
+
+// Verification Badge Component
+export interface VerificationBadgeProps {
+  verificationType: "none" | "verified" | "music" | "government" | "business";
+  className?: string;
+}
+
+export function VerificationBadge({ verificationType, className }: VerificationBadgeProps) {
+  if (verificationType === "none") return null;
+
+  const getBadgeConfig = () => {
+    switch (verificationType) {
+      case "verified":
+        return { variant: "verified" as const, text: "✓ Verified" };
+      case "music":
+        return { variant: "music" as const, text: "♪ Music" };
+      case "government":
+        return { variant: "government" as const, text: "🏛️ Official" };
+      case "business":
+        return { variant: "business" as const, text: "🏢 Business" };
+      default:
+        return null;
+    }
+  };
+
+  const config = getBadgeConfig();
+  if (!config) return null;
+
+  return (
+    <Badge variant={config.variant} className={cn("text-xs", className)}>
+      {config.text}
+    </Badge>
+  );
+}

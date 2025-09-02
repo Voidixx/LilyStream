@@ -64,6 +64,9 @@ interface AdminStats {
   newVideosToday: number;
 }
 
+// Define the type for verification badges
+type VerificationType = "creator" | "music" | "verified" | null;
+
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
@@ -80,12 +83,12 @@ export default function AdminDashboard() {
     }
   }, [user, setLocation]);
 
-  const { data: adminStats } = useQuery<AdminStats>({
+  const { data: adminStats, refetch: refetchStats } = useQuery<AdminStats>({
     queryKey: ['/api/admin/analytics'],
     enabled: !!user?.isAdmin,
   });
 
-  const { data: users } = useQuery({
+  const { data: users, refetch: refetchUsers } = useQuery({
     queryKey: ['/api/admin/users', searchTerm, filterStatus],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -100,7 +103,7 @@ export default function AdminDashboard() {
     enabled: !!user?.isAdmin,
   });
 
-  const { data: videos } = useQuery({
+  const { data: videos, refetch: refetchVideos } = useQuery({
     queryKey: ['/api/admin/videos', searchTerm, filterStatus],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -115,7 +118,7 @@ export default function AdminDashboard() {
     enabled: !!user?.isAdmin,
   });
 
-  const { data: comments } = useQuery({
+  const { data: comments, refetch: refetchComments } = useQuery({
     queryKey: ['/api/admin/comments', searchTerm, filterStatus],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -129,7 +132,7 @@ export default function AdminDashboard() {
     enabled: !!user?.isAdmin,
   });
 
-  const { data: reports } = useQuery({
+  const { data: reports, refetch: refetchReports } = useQuery({
     queryKey: ['/api/admin/reports', filterStatus],
     queryFn: async () => {
       // Mock data for now as reports endpoint needs to be implemented
@@ -166,31 +169,54 @@ export default function AdminDashboard() {
       if (action === 'ban') {
         const banReason = reason || prompt('Enter ban reason:');
         if (!banReason) return;
-        
+
         const response = await fetch(`/api/admin/users/${userId}/ban`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ reason: banReason })
         });
-        
+
         if (response.ok) {
           toast({ title: 'User banned successfully' });
           // Refresh the users data
-          queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+          refetchUsers();
         }
       } else if (action === 'unban') {
         const response = await fetch(`/api/admin/users/${userId}/unban`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
         });
-        
+
         if (response.ok) {
           toast({ title: 'User unbanned successfully' });
-          queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+          refetchUsers();
         }
       }
     } catch (error) {
       toast({ title: 'Action failed', description: 'Please try again', variant: 'destructive' });
+    }
+  };
+
+  const handleVerificationChange = async (userId: string, verificationType: VerificationType) => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ verificationType }),
+      });
+
+      if (response.ok) {
+        toast({ title: 'Verification status updated successfully' });
+        // Refresh users data
+        refetchUsers();
+      } else {
+        toast({ title: 'Failed to update verification status', variant: 'destructive' });
+      }
+    } catch (error) {
+      console.error('Error updating verification:', error);
+      toast({ title: 'An error occurred', description: 'Please try again', variant: 'destructive' });
     }
   };
 
@@ -199,16 +225,16 @@ export default function AdminDashboard() {
       if (action === 'block') {
         const blockReason = reason || prompt('Enter reason for blocking:');
         if (!blockReason) return;
-        
+
         const response = await fetch(`/api/admin/videos/${videoId}/moderate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: 'blocked', reason: blockReason })
         });
-        
+
         if (response.ok) {
           toast({ title: 'Video blocked successfully' });
-          queryClient.invalidateQueries({ queryKey: ['/api/admin/videos'] });
+          refetchVideos();
         }
       } else if (action === 'unblock') {
         const response = await fetch(`/api/admin/videos/${videoId}/moderate`, {
@@ -216,10 +242,19 @@ export default function AdminDashboard() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: 'approved', reason: 'Unblocked by admin' })
         });
-        
+
         if (response.ok) {
           toast({ title: 'Video unblocked successfully' });
-          queryClient.invalidateQueries({ queryKey: ['/api/admin/videos'] });
+          refetchVideos();
+        }
+      } else if (action === 'delete') {
+        const response = await fetch(`/api/admin/videos/${videoId}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          toast({ title: 'Video deleted successfully' });
+          refetchVideos();
         }
       }
     } catch (error) {
@@ -232,16 +267,16 @@ export default function AdminDashboard() {
       if (action === 'block') {
         const blockReason = reason || prompt('Enter reason for blocking:');
         if (!blockReason) return;
-        
+
         const response = await fetch(`/api/admin/comments/${commentId}/moderate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: 'blocked', reason: blockReason })
         });
-        
+
         if (response.ok) {
           toast({ title: 'Comment blocked successfully' });
-          queryClient.invalidateQueries({ queryKey: ['/api/admin/comments'] });
+          refetchComments();
         }
       } else if (action === 'unblock') {
         const response = await fetch(`/api/admin/comments/${commentId}/moderate`, {
@@ -249,10 +284,19 @@ export default function AdminDashboard() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: 'approved', reason: 'Unblocked by admin' })
         });
-        
+
         if (response.ok) {
           toast({ title: 'Comment unblocked successfully' });
-          queryClient.invalidateQueries({ queryKey: ['/api/admin/comments'] });
+          refetchComments();
+        }
+      } else if (action === 'delete') {
+        const response = await fetch(`/api/admin/comments/${commentId}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          toast({ title: 'Comment deleted successfully' });
+          refetchComments();
         }
       }
     } catch (error) {
@@ -505,6 +549,8 @@ export default function AdminDashboard() {
                           {user.isModerator && <Badge className="bg-blue-100 text-blue-800">Mod</Badge>}
                           {user.isVerified && <Badge className="bg-green-100 text-green-800">Verified</Badge>}
                           {user.isBanned && <Badge variant="destructive">Banned</Badge>}
+                          {user.verificationType === "creator" && <Badge className="bg-purple-100 text-purple-800">Creator</Badge>}
+                          {user.verificationType === "music" && <Badge className="bg-indigo-100 text-indigo-800">Music</Badge>}
                         </div>
                       </TableCell>
                       <TableCell>{user.videoCount || 0}</TableCell>
@@ -520,14 +566,19 @@ export default function AdminDashboard() {
                           >
                             {user.isBanned ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleUserAction(user.id, user.isVerified ? 'unverify' : 'verify')}
-                            data-testid={`verify-user-${user.id}`}
-                          >
-                            <UserCheck className="w-3 h-3" />
-                          </Button>
+                          
+                          <Select onValueChange={(value) => handleVerificationChange(user.id, value as VerificationType)}>
+                            <SelectTrigger className="w-auto h-8 px-2">
+                              <UserCheck className="w-3 h-3 mr-1" />
+                              <SelectValue placeholder="Verify" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="verified">Verified</SelectItem>
+                              <SelectItem value="creator">Creator</SelectItem>
+                              <SelectItem value="music">Music Artist</SelectItem>
+                              <SelectItem value={null}>Remove Badge</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -687,10 +738,10 @@ export default function AdminDashboard() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
-                          <Button variant="outline" size="sm" data-testid={`approve-report-${report.id}`}>
+                          <Button variant="outline" size="sm" data-testid={`approve-report-${report.id}`} onClick={() => handleReportAction(report.id, 'resolve')}>
                             <CheckCircle className="w-3 h-3" />
                           </Button>
-                          <Button variant="outline" size="sm" data-testid={`reject-report-${report.id}`}>
+                          <Button variant="outline" size="sm" data-testid={`reject-report-${report.id}`} onClick={() => handleReportAction(report.id, 'reject')}>
                             <XCircle className="w-3 h-3" />
                           </Button>
                         </div>

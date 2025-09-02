@@ -154,8 +154,9 @@ export class JsonStorage {
       subscriberCount: 0,
       videoCount: 0,
       totalViews: 0,
-      isVerified: false,
-      isAdmin: isFirstUser,
+      isVerified: userData.isAdmin || false,
+      verificationType: userData.isAdmin ? "verified" : "none",
+      isAdmin: userData.isAdmin || false,
       isModerator: false,
       isBanned: false,
       banReason: null,
@@ -199,10 +200,53 @@ export class JsonStorage {
 
     if (userIndex === -1) return undefined;
 
-    this.data.users[userIndex] = { ...this.data.users[userIndex], ...updates, updatedAt: new Date() };
+    this.data.users[userIndex] = {
+      ...this.data.users[userIndex],
+      ...updates,
+      updatedAt: new Date()
+    };
+
+    // Auto-verify based on subscriber count
+    await this.checkVerificationEligibility(this.data.users[userIndex]);
+
     this.saveData(this.data);
 
     return this.data.users[userIndex];
+  }
+
+  private async checkVerificationEligibility(user: User): Promise<void> {
+    // Don't change admin verification
+    if (user.isAdmin) {
+      user.isVerified = true;
+      user.verificationType = "verified";
+      return;
+    }
+
+    // Auto-verify users with 100k+ subscribers
+    if (user.subscriberCount >= 100000 && (!user.isVerified || user.verificationType === "none")) {
+      user.isVerified = true;
+      user.verificationType = "verified";
+    }
+  }
+
+  async setVerificationType(userId: string, type: "none" | "verified" | "music" | "government" | "business"): Promise<boolean> {
+    await this.ensureInitialized();
+    const userIndex = this.data.users.findIndex(u => u.id === userId);
+    if (userIndex === -1) return false;
+
+    this.data.users[userIndex].verificationType = type;
+    this.data.users[userIndex].isVerified = type !== "none";
+    this.data.users[userIndex].updatedAt = new Date();
+
+    // Apply specific logic for music badge if type is 'music'
+    if (type === 'music') {
+      // This is a placeholder; in a real app, you'd check if the user is a music artist
+      // For now, we'll just set the badge
+      this.data.users[userIndex].isVerified = true;
+    }
+
+    this.saveData(this.data);
+    return true;
   }
 
   // Admin operations
@@ -422,7 +466,7 @@ export class JsonStorage {
     }
   }
 
-  // Subscription operations  
+  // Subscription operations
   async subscribe(subscriberId: string, channelId: string): Promise<void> {
     await this.ensureInitialized();
     const existing = this.data.subscriptions.find(sub =>

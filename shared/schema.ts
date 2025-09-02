@@ -41,6 +41,9 @@ export const users = pgTable("users", {
   videoCount: integer("video_count").default(0),
   totalViews: integer("total_views").default(0),
   isVerified: boolean("is_verified").default(false),
+  verificationType: varchar("verification_type", { 
+    enum: ["none", "verified", "music", "government", "business"] 
+  }).default("none"),
   isAdmin: boolean("is_admin").default(false),
   isModerator: boolean("is_moderator").default(false),
   isBanned: boolean("is_banned").default(false),

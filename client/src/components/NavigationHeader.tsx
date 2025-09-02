@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/ThemeProvider";
 import { GuestPrompt, useGuestPrompt } from "./GuestPrompt";
 import NotificationCenter from "./NotificationCenter";
+import { Badge, VerificationBadge } from "@/components/ui/badge";
 
 interface NavigationHeaderProps {
   onSearch?: (query: string) => void;
@@ -29,7 +30,7 @@ export default function NavigationHeader({ onSearch }: NavigationHeaderProps) {
   const { currentPrompt, showPrompt, hidePrompt } = useGuestPrompt();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  
+
   // Placeholder for notifications and handlers - replace with actual implementation
   const notifications = []; 
   const handleMarkAsRead = () => {};
@@ -63,6 +64,19 @@ export default function NavigationHeader({ onSearch }: NavigationHeaderProps) {
     if (searchQuery.trim()) {
       setLocation(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
+  };
+
+  const getVerificationBadge = (user: any) => {
+    if (user?.isVerifiedCreator) {
+      return <VerificationBadge type="creator" />;
+    }
+    if (user?.isVerifiedMusician) {
+      return <VerificationBadge type="music" />;
+    }
+    if (user?.isAdmin) {
+      return <VerificationBadge type="admin" />;
+    }
+    return null;
   };
 
   return (
@@ -167,6 +181,7 @@ export default function NavigationHeader({ onSearch }: NavigationHeaderProps) {
                     </AvatarFallback>
                   </Avatar>
                   <span className="hidden lg:inline font-medium text-sm">{user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.username || 'User'}</span>
+                  {getVerificationBadge(user)}
                   <ChevronDown className="w-3 h-3 hidden sm:block" />
                 </Button>
 

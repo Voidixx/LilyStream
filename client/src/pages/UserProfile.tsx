@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Badge, VerificationBadge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { VideoCard } from "@/components/VideoCard";
@@ -136,9 +136,11 @@ export default function UserProfile() {
                     <h1 className="text-2xl md:text-3xl font-bold" data-testid="profile-display-name">
                       {profileUser.displayName || profileUser.username}
                     </h1>
-                    {profileUser.isVerified && (
-                      <CheckCircle className="w-6 h-6 text-blue-500" data-testid="verified-badge" />
-                    )}
+                    <VerificationBadge 
+                      verificationType={profileUser.verificationType || "none"} 
+                      className="ml-2"
+                      data-testid="verification-badge" 
+                    />
                   </div>
                   <p className="text-muted-foreground" data-testid="profile-username">
                     @{profileUser.username}
