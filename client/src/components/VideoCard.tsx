@@ -53,7 +53,7 @@ export default function VideoCard({ video, showOptions = false }: VideoCardProps
   };
 
   return (
-    <Card className="video-card overflow-hidden shadow-lg hover:shadow-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:-translate-y-2">
+    <Card className="video-card overflow-hidden shadow-lg hover:shadow-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 w-full">
       <div className="relative" onClick={handleVideoClick}>
         <img 
           src={imageError || !video.thumbnailUrl 
@@ -61,7 +61,7 @@ export default function VideoCard({ video, showOptions = false }: VideoCardProps
             : video.thumbnailUrl
           }
           alt={video.title}
-          className="w-full h-48 object-cover"
+          className="w-full h-32 sm:h-40 md:h-48 object-cover"
           onError={() => setImageError(true)}
           data-testid="video-thumbnail"
         />

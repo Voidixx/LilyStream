@@ -7,7 +7,22 @@ import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
 import { setupAuth, requireAuth } from "./auth";
-import { insertVideoSchema, insertCommentSchema, insertPlaylistSchema } from "@shared/schema";
+import { insertVideoSchema, insertCommentSchema, insertPlaylistSchema, User } from "@shared/schema";
+
+// Admin middleware
+const requireAdmin = async (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated() || !req.user) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  
+  const user = await storage.getUser(req.user.id);
+  if (!user?.isAdmin) {
+    return res.status(403).json({ message: "Admin access required" });
+  }
+  
+  req.adminUser = user;
+  next();
+};
 
 // Configure multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -89,15 +104,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      res.json(user);
+      // Remove sensitive data
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Admin routes
+  app.get('/api/admin/analytics', requireAdmin, async (req: any, res) => {
+    try {
+      const analytics = await storage.getAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  app.get('/api/admin/users', requireAdmin, async (req: any, res) => {
+    try {
+      const { page = '1', limit = '20', search = '' } = req.query;
+      const result = await storage.getAllUsers(
+        parseInt(page as string),
+        parseInt(limit as string),
+        search as string
+      );
+      
+      // Remove passwords from all users
+      const users = result.users.map(({ password, ...user }) => user);
+      res.json({ ...result, users });
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get('/api/admin/videos', requireAdmin, async (req: any, res) => {
+    try {
+      const { page = '1', limit = '20', search = '', status = '' } = req.query;
+      const result = await storage.getAllVideos(
+        parseInt(page as string),
+        parseInt(limit as string),
+        search as string,
+        status as string
+      );
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching videos:", error);
+      res.status(500).json({ message: "Failed to fetch videos" });
+    }
+  });
+
+  app.get('/api/admin/comments', requireAdmin, async (req: any, res) => {
+    try {
+      const { page = '1', limit = '20', search = '' } = req.query;
+      const result = await storage.getAllComments(
+        parseInt(page as string),
+        parseInt(limit as string),
+        search as string
+      );
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  app.post('/api/admin/users/:id/ban', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+      await storage.banUser(id, reason, req.adminUser.id);
+      res.json({ message: "User banned successfully" });
+    } catch (error) {
+      console.error("Error banning user:", error);
+      res.status(500).json({ message: "Failed to ban user" });
+    }
+  });
+
+  app.post('/api/admin/users/:id/unban', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.unbanUser(id, req.adminUser.id);
+      res.json({ message: "User unbanned successfully" });
+    } catch (error) {
+      console.error("Error unbanning user:", error);
+      res.status(500).json({ message: "Failed to unban user" });
+    }
+  });
+
+  app.post('/api/admin/videos/:id/moderate', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { status, reason } = req.body;
+      await storage.moderateVideo(id, status, reason, req.adminUser.id);
+      res.json({ message: "Video moderated successfully" });
+    } catch (error) {
+      console.error("Error moderating video:", error);
+      res.status(500).json({ message: "Failed to moderate video" });
+    }
+  });
+
+  app.post('/api/admin/comments/:id/moderate', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { status, reason } = req.body;
+      await storage.moderateComment(id, status, reason, req.adminUser.id);
+      res.json({ message: "Comment moderated successfully" });
+    } catch (error) {
+      console.error("Error moderating comment:", error);
+      res.status(500).json({ message: "Failed to moderate comment" });
     }
   });
 

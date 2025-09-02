@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,6 +70,8 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Redirect if not admin
   useEffect(() => {
@@ -78,27 +81,60 @@ export default function AdminDashboard() {
   }, [user, setLocation]);
 
   const { data: adminStats } = useQuery<AdminStats>({
-    queryKey: ['/api/admin/stats'],
+    queryKey: ['/api/admin/analytics'],
     enabled: !!user?.isAdmin,
   });
 
   const { data: users } = useQuery({
     queryKey: ['/api/admin/users', searchTerm, filterStatus],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        search: searchTerm,
+        status: filterStatus === 'all' ? '' : filterStatus
+      });
+      const response = await fetch(`/api/admin/users?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch users');
+      const data = await response.json();
+      return data.users || [];
+    },
     enabled: !!user?.isAdmin,
   });
 
   const { data: videos } = useQuery({
     queryKey: ['/api/admin/videos', searchTerm, filterStatus],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        search: searchTerm,
+        status: filterStatus === 'all' ? '' : filterStatus
+      });
+      const response = await fetch(`/api/admin/videos?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch videos');
+      const data = await response.json();
+      return data.videos || [];
+    },
     enabled: !!user?.isAdmin,
   });
 
   const { data: comments } = useQuery({
     queryKey: ['/api/admin/comments', searchTerm, filterStatus],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        search: searchTerm
+      });
+      const response = await fetch(`/api/admin/comments?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch comments');
+      const data = await response.json();
+      return data.comments || [];
+    },
     enabled: !!user?.isAdmin,
   });
 
   const { data: reports } = useQuery({
     queryKey: ['/api/admin/reports', filterStatus],
+    queryFn: async () => {
+      // Mock data for now as reports endpoint needs to be implemented
+      return [];
+    },
     enabled: !!user?.isAdmin,
   });
 
@@ -126,18 +162,102 @@ export default function AdminDashboard() {
   }
 
   const handleUserAction = async (userId: string, action: string, reason?: string) => {
-    // TODO: Implement user moderation actions
-    console.log(`${action} user ${userId}`, reason);
+    try {
+      if (action === 'ban') {
+        const banReason = reason || prompt('Enter ban reason:');
+        if (!banReason) return;
+        
+        const response = await fetch(`/api/admin/users/${userId}/ban`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: banReason })
+        });
+        
+        if (response.ok) {
+          toast({ title: 'User banned successfully' });
+          // Refresh the users data
+          queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+        }
+      } else if (action === 'unban') {
+        const response = await fetch(`/api/admin/users/${userId}/unban`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+          toast({ title: 'User unbanned successfully' });
+          queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+        }
+      }
+    } catch (error) {
+      toast({ title: 'Action failed', description: 'Please try again', variant: 'destructive' });
+    }
   };
 
   const handleVideoAction = async (videoId: string, action: string, reason?: string) => {
-    // TODO: Implement video moderation actions
-    console.log(`${action} video ${videoId}`, reason);
+    try {
+      if (action === 'block') {
+        const blockReason = reason || prompt('Enter reason for blocking:');
+        if (!blockReason) return;
+        
+        const response = await fetch(`/api/admin/videos/${videoId}/moderate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'blocked', reason: blockReason })
+        });
+        
+        if (response.ok) {
+          toast({ title: 'Video blocked successfully' });
+          queryClient.invalidateQueries({ queryKey: ['/api/admin/videos'] });
+        }
+      } else if (action === 'unblock') {
+        const response = await fetch(`/api/admin/videos/${videoId}/moderate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'approved', reason: 'Unblocked by admin' })
+        });
+        
+        if (response.ok) {
+          toast({ title: 'Video unblocked successfully' });
+          queryClient.invalidateQueries({ queryKey: ['/api/admin/videos'] });
+        }
+      }
+    } catch (error) {
+      toast({ title: 'Action failed', description: 'Please try again', variant: 'destructive' });
+    }
   };
 
   const handleCommentAction = async (commentId: string, action: string, reason?: string) => {
-    // TODO: Implement comment moderation actions
-    console.log(`${action} comment ${commentId}`, reason);
+    try {
+      if (action === 'block') {
+        const blockReason = reason || prompt('Enter reason for blocking:');
+        if (!blockReason) return;
+        
+        const response = await fetch(`/api/admin/comments/${commentId}/moderate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'blocked', reason: blockReason })
+        });
+        
+        if (response.ok) {
+          toast({ title: 'Comment blocked successfully' });
+          queryClient.invalidateQueries({ queryKey: ['/api/admin/comments'] });
+        }
+      } else if (action === 'unblock') {
+        const response = await fetch(`/api/admin/comments/${commentId}/moderate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'approved', reason: 'Unblocked by admin' })
+        });
+        
+        if (response.ok) {
+          toast({ title: 'Comment unblocked successfully' });
+          queryClient.invalidateQueries({ queryKey: ['/api/admin/comments'] });
+        }
+      }
+    } catch (error) {
+      toast({ title: 'Action failed', description: 'Please try again', variant: 'destructive' });
+    }
   };
 
   return (

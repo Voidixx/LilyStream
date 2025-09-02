@@ -53,7 +53,23 @@ export default function Home() {
   const [matchSearch] = useRoute('/search');
 
   const { data: videos, isLoading } = useQuery({
-    queryKey: ['/api/videos', selectedCategory, searchQuery],
+    queryKey: ['/api/videos', selectedCategory, searchQuery, activeTab],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedCategory && selectedCategory !== 'All') {
+        params.append('category', selectedCategory);
+      }
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+      if (activeTab === 'recommended') {
+        params.append('fyp', 'true');
+      }
+      
+      const response = await fetch(`/api/videos?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch videos');
+      return response.json();
+    },
     enabled: true,
   });
 
@@ -104,25 +120,27 @@ export default function Home() {
       <NavigationHeader onSearch={setSearchQuery} />
       
       <main className="pt-16">
-        {/* Quick Stats Bar */}
-        <section className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 text-white py-3">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-6">
+        {/* Quick Stats Bar - Mobile Responsive */}
+        <section className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 text-white py-2 sm:py-3">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+            <div className="flex flex-col sm:flex-row items-center justify-between text-xs sm:text-sm space-y-2 sm:space-y-0">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-6">
                 <div className="flex items-center space-x-1">
-                  <Play className="w-4 h-4" />
-                  <span>{filteredVideos.length} videos available</span>
+                  <Play className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>{filteredVideos.length} videos</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Users className="w-4 h-4" />
-                  <span>Join thousands of creators</span>
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Join thousands of creators</span>
+                  <span className="sm:hidden">Creators platform</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Zap className="w-4 h-4" />
-                  <span>Fair algorithm for everyone</span>
+                  <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Fair algorithm for everyone</span>
+                  <span className="sm:hidden">Fair algorithm</span>
                 </div>
               </div>
-              <div className="hidden md:flex items-center space-x-4">
+              <div className="flex items-center space-x-2 sm:space-x-4">
                 {!user && (
                   <Button 
                     variant="outline" 
