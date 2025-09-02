@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import NavigationHeader from "@/components/NavigationHeader";
+import { NavigationHeader } from "@/components/NavigationHeader";
 import VideoCard from "@/components/VideoCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -113,7 +113,7 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-background">
       <NavigationHeader />
-      
+
       <main className="pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Profile Header */}
@@ -130,7 +130,7 @@ export default function Profile() {
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/80 to-purple-600/80" />
               </div>
-              
+
               <div className="flex flex-col md:flex-row items-start md:items-center space-y-6 md:space-y-0 md:space-x-8">
                 <Avatar className="w-32 h-32">
                   <AvatarImage src={user.profileImageUrl} />
@@ -138,7 +138,7 @@ export default function Profile() {
                     {user.firstName?.[0] || user.email?.[0] || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                
+
                 <div className="flex-1">
                   <h1 className="text-3xl font-bold text-card-foreground mb-2" data-testid="user-name">
                     {user.firstName && user.lastName
@@ -151,7 +151,7 @@ export default function Profile() {
                       {user.bio}
                     </p>
                   )}
-                  
+
                   <div className="flex flex-wrap gap-6 text-sm">
                     <div className="flex items-center space-x-2">
                       <Video className="w-4 h-4 text-muted-foreground" />
@@ -371,7 +371,7 @@ export default function Profile() {
                     ) : (
                       <p className="text-muted-foreground italic">No description available.</p>
                     )}
-                    
+
                     <div>
                       <h4 className="font-medium text-card-foreground mb-2">Channel Details</h4>
                       <div className="space-y-2 text-sm">

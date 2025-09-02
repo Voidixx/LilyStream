@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "wouter";
-import NavigationHeader from "@/components/NavigationHeader";
+import { NavigationHeader } from "@/components/NavigationHeader";
 import VideoPlayer from "@/components/VideoPlayer";
 import CommentSection from "@/components/CommentSection";
 import VideoCard from "@/components/VideoCard";
@@ -160,7 +160,7 @@ export default function Watch() {
   return (
     <div className="min-h-screen bg-background">
       <NavigationHeader />
-      
+
       <main className="pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -175,7 +175,7 @@ export default function Watch() {
                   <h1 className="text-2xl font-bold text-card-foreground mb-4" data-testid="video-title">
                     {video.title}
                   </h1>
-                  
+
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-4">
                       <Avatar className="w-12 h-12">
@@ -196,7 +196,7 @@ export default function Watch() {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-3">
                       <div className="flex items-center bg-muted rounded-full">
                         <Button
@@ -247,7 +247,7 @@ export default function Watch() {
                   <div className="text-muted-foreground text-sm mb-4" data-testid="video-stats">
                     {video.views?.toLocaleString() || 0} views • {new Date(video.createdAt).toLocaleDateString()}
                   </div>
-                  
+
                   {video.description && (
                     <div className="border-t border-border pt-4">
                       <p className="text-card-foreground whitespace-pre-wrap" data-testid="video-description">

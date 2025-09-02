@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
-import NavigationHeader from "@/components/NavigationHeader";
+import { NavigationHeader } from "@/components/NavigationHeader";
 import VideoCard from "@/components/VideoCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
