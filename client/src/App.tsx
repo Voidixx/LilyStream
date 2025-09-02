@@ -16,6 +16,7 @@ import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 import WatchHistory from "@/pages/WatchHistory";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import EditProfile from "@/pages/EditProfile";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/history" component={WatchHistory} />
       <Route path="/terms" component={TermsOfService} />
       <Route path="/privacy" component={PrivacyPolicy} />
+      <Route path="/edit-profile" component={EditProfile} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/trending" component={Home} />
       <Route path="/search" component={Home} />

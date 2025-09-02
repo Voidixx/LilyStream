@@ -14,6 +14,7 @@ import { Play, Search, Plus, Bell, Moon, Sun, User, Upload, LogOut, Menu, BarCha
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/ThemeProvider";
 import { GuestPrompt, useGuestPrompt } from "./GuestPrompt";
+import NotificationCenter from "./NotificationCenter";
 
 interface NavigationHeaderProps {
   onSearch?: (query: string) => void;
@@ -125,17 +126,7 @@ export default function NavigationHeader({ onSearch }: NavigationHeaderProps) {
               {user ? 'Upload' : 'Upload Video'}
             </Button>
 
-            {user && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:bg-muted relative"
-                data-testid="notifications-button"
-              >
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-              </Button>
-            )}
+            {user && <NotificationCenter />}
 
             {user ? (
               <DropdownMenu>

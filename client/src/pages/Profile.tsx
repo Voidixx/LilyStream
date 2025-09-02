@@ -7,13 +7,25 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Video, Eye, Users, Calendar, Edit, BarChart3 } from "lucide-react";
+import { Video, Eye, Users, Calendar, Edit, BarChart3, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Profile() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const [createPlaylistOpen, setCreatePlaylistOpen] = useState(false);
+  const [playlistName, setPlaylistName] = useState("");
+  const [playlistDescription, setPlaylistDescription] = useState("");
+  const queryClient = useQueryClient();
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -31,15 +43,61 @@ export default function Profile() {
   }, [isAuthenticated, isLoading, toast]);
 
   const { data: userVideos, isLoading: videosLoading } = useQuery({
-    queryKey: ['/api/videos'],
+    queryKey: ['/api/videos', { userId: user?.id }],
     enabled: !!user,
-    select: (videos: any[]) => videos?.filter(video => video.userId === user?.id) || [],
+    queryFn: async () => {
+      const res = await fetch(`/api/videos?userId=${user?.id}`);
+      if (!res.ok) throw new Error('Failed to fetch videos');
+      return await res.json();
+    },
   });
 
   const { data: playlists, isLoading: playlistsLoading } = useQuery({
     queryKey: ['/api/playlists'],
     enabled: !!user,
   });
+
+  const createPlaylistMutation = useMutation({
+    mutationFn: async (data: { name: string; description: string }) => {
+      const res = await apiRequest("POST", "/api/playlists", {
+        name: data.name,
+        description: data.description,
+        userId: user?.id,
+        isPublic: true
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Playlist created successfully!",
+        description: "Your new playlist is ready to use.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/playlists"] });
+      setCreatePlaylistOpen(false);
+      setPlaylistName("");
+      setPlaylistDescription("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error creating playlist",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCreatePlaylist = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!playlistName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a playlist name.",
+        variant: "destructive",
+      });
+      return;
+    }
+    createPlaylistMutation.mutate({ name: playlistName, description: playlistDescription });
+  };
 
   if (isLoading || !isAuthenticated) {
     return null;
@@ -123,6 +181,7 @@ export default function Profile() {
 
                 <div className="flex space-x-4">
                   <Button 
+                    onClick={() => setLocation('/edit-profile')}
                     className="px-6 py-3 bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
                     data-testid="edit-profile-button"
                   >
@@ -130,6 +189,7 @@ export default function Profile() {
                     Edit Profile
                   </Button>
                   <Button 
+                    onClick={() => setLocation('/analytics')}
                     variant="outline"
                     className="px-6 py-3 font-semibold"
                     data-testid="analytics-button"
@@ -137,10 +197,68 @@ export default function Profile() {
                     <BarChart3 className="w-4 h-4 mr-2" />
                     Analytics
                   </Button>
+                  <Button 
+                    onClick={() => setCreatePlaylistOpen(true)}
+                    variant="outline"
+                    className="px-6 py-3 font-semibold"
+                    data-testid="create-playlist-button"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Playlist
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* Create Playlist Dialog */}
+          <Dialog open={createPlaylistOpen} onOpenChange={setCreatePlaylistOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Create New Playlist</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleCreatePlaylist} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="playlist-name">Playlist Name</Label>
+                  <Input
+                    id="playlist-name"
+                    value={playlistName}
+                    onChange={(e) => setPlaylistName(e.target.value)}
+                    placeholder="Enter playlist name..."
+                    data-testid="playlist-name-input"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="playlist-description">Description (Optional)</Label>
+                  <Textarea
+                    id="playlist-description"
+                    value={playlistDescription}
+                    onChange={(e) => setPlaylistDescription(e.target.value)}
+                    placeholder="Describe your playlist..."
+                    rows={3}
+                    data-testid="playlist-description-input"
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setCreatePlaylistOpen(false)}
+                    data-testid="cancel-playlist-button"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={createPlaylistMutation.isPending}
+                    data-testid="create-playlist-submit-button"
+                  >
+                    {createPlaylistMutation.isPending ? "Creating..." : "Create Playlist"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
 
           {/* Content Tabs */}
           <Tabs defaultValue="videos" className="space-y-6">

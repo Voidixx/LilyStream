@@ -429,6 +429,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: description?.trim() || '',
         category: category || 'Other',
         privacy,
+        status: 'published', // Auto-publish videos when uploaded
         userId,
         videoUrl: `/uploads/videos/${req.file.filename}`,
         thumbnailUrl: null,
@@ -841,6 +842,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching watch history:", error);
       res.status(500).json({ message: "Failed to fetch watch history" });
+    }
+  });
+
+  // Notification routes
+  app.get('/api/notifications', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Mock notifications for demo - in production this would come from database
+      const mockNotifications = [
+        {
+          id: '1',
+          type: 'like',
+          title: 'New Like on Your Video',
+          message: 'Someone liked your video "Amazing Content"',
+          isRead: false,
+          createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
+          actionUrl: '/watch/1'
+        },
+        {
+          id: '2',
+          type: 'subscription',
+          title: 'New Subscriber!',
+          message: 'You have a new subscriber to your channel',
+          isRead: false,
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+        },
+        {
+          id: '3',
+          type: 'milestone',
+          title: 'Milestone Reached!',
+          message: 'Your video has reached 1,000 views!',
+          isRead: true,
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+        }
+      ];
+      
+      res.json(mockNotifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.patch('/api/notifications/:id/read', requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      // In production, update the notification in the database
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  app.patch('/api/notifications/mark-all-read', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      // In production, mark all notifications as read for this user
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+
+  app.delete('/api/notifications/:id', requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      // In production, delete the notification from the database
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      res.status(500).json({ message: "Failed to delete notification" });
+    }
+  });
+
+  // Profile update route
+  app.patch('/api/users/:id', requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+      
+      // Only allow users to edit their own profile
+      if (id !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const updates = req.body;
+      const updatedUser = await storage.updateUser(id, updates);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
     }
   });
 
