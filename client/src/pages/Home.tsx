@@ -27,6 +27,7 @@ import {
   Laptop
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import Footer from "@/components/Footer";
 import { format, formatDistance } from "date-fns";
 
 const categories = [
@@ -289,6 +290,8 @@ export default function Home() {
           )}
         </section>
       </main>
+      
+      <Footer />
     </div>
   );
 }

@@ -12,6 +12,10 @@ import Watch from "@/pages/Watch";
 import Upload from "@/pages/Upload";
 import Profile from "@/pages/Profile";
 import AnalyticsDashboard from "@/pages/AnalyticsDashboard";
+import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
+import WatchHistory from "@/pages/WatchHistory";
+import TermsOfService from "@/pages/TermsOfService";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -25,6 +29,10 @@ function Router() {
       <Route path="/upload" component={Upload} />
       <Route path="/profile/:username?" component={Profile} />
       <Route path="/analytics" component={AnalyticsDashboard} />
+      <Route path="/admin" component={SuperAdminDashboard} />
+      <Route path="/history" component={WatchHistory} />
+      <Route path="/terms" component={TermsOfService} />
+      <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/trending" component={Home} />
       <Route path="/search" component={Home} />

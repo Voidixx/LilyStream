@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Play, Search, Plus, Bell, Moon, Sun, User, Upload, LogOut, Menu, BarChart3 } from "lucide-react";
+import { Play, Search, Plus, Bell, Moon, Sun, User, Upload, LogOut, Menu, BarChart3, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/ThemeProvider";
 import { GuestPrompt, useGuestPrompt } from "./GuestPrompt";
@@ -211,6 +211,15 @@ export default function NavigationHeader({ onSearch }: NavigationHeaderProps) {
                     <BarChart3 className="mr-2 h-4 w-4" />
                     Analytics
                   </DropdownMenuItem>
+                  {user?.isAdmin && (
+                    <DropdownMenuItem 
+                      onClick={() => setLocation('/admin')}
+                      data-testid="admin-dashboard-menu-item"
+                    >
+                      <Shield className="mr-2 h-4 w-4" />
+                      Admin Dashboard
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     onClick={() => {

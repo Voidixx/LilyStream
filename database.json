@@ -1,12 +1,54 @@
 {
-  "users": [],
+  "users": [
+    {
+      "id": "VndDN451Twhr33RRAhrwH",
+      "username": "Lily...",
+      "email": "lilyisher687@gmail.com",
+      "password": "b8a10150b3d2d26c6088a6ed45bd376c7e8196b03f5eab8dae51da2a0c97f85b77b972b9edafca7d56068ad67210c9676869898de438355d90ba42076e9bcb3a.1fecb2cdc9fd590e9d611c4391225534",
+      "firstName": "Lily",
+      "lastName": "Higby",
+      "displayName": "Lily...",
+      "profileImageUrl": null,
+      "bannerImageUrl": null,
+      "bio": null,
+      "location": null,
+      "website": null,
+      "subscriberCount": 0,
+      "videoCount": 0,
+      "totalViews": 0,
+      "isVerified": false,
+      "isAdmin": true,
+      "isModerator": false,
+      "isBanned": false,
+      "banReason": null,
+      "lastLoginAt": "2025-09-02T05:03:23.678Z",
+      "createdAt": "2025-09-02T05:03:23.678Z",
+      "updatedAt": "2025-09-02T05:03:23.678Z"
+    }
+  ],
   "videos": [],
   "comments": [],
   "likes": [],
   "subscriptions": [],
   "notifications": [],
   "reports": [],
-  "userSettings": [],
+  "userSettings": [
+    {
+      "id": "Xx1eQlfZ8z5TI0onTi2hg",
+      "userId": "VndDN451Twhr33RRAhrwH",
+      "emailNotifications": true,
+      "pushNotifications": true,
+      "privacyLevel": "public",
+      "showWatchHistory": true,
+      "showSubscriptions": true,
+      "autoplay": true,
+      "quality": "auto",
+      "theme": "auto",
+      "language": "en",
+      "createdAt": "2025-09-02T05:03:23.678Z",
+      "updatedAt": "2025-09-02T05:03:23.678Z"
+    }
+  ],
   "watchHistory": [],
   "algorithmData": [],
   "categories": [
