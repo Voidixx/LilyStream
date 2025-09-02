@@ -1,4 +1,3 @@
-
 import NavigationHeader from "@/components/NavigationHeader";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,7 +41,7 @@ export default function Help() {
   return (
     <div className="min-h-screen bg-background">
       <NavigationHeader />
-      
+
       <main className="pt-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center mb-16">
@@ -53,7 +52,7 @@ export default function Help() {
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
               Find answers to common questions and get help with using LilyTube
             </p>
-            
+
             {/* Search Bar */}
             <div className="max-w-2xl mx-auto">
               <div className="relative">

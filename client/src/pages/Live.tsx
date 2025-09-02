@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import NavigationHeader from "@/components/NavigationHeader";
 import { Footer } from "@/components/Footer";
@@ -40,14 +39,14 @@ export default function Live() {
         video: { width: 1920, height: 1080 }, 
         audio: true 
       });
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
-      
+
       setIsLive(true);
       setViewerCount(Math.floor(Math.random() * 100) + 1);
-      
+
       toast({
         title: "Stream started!",
         description: "You are now live streaming"
@@ -99,7 +98,7 @@ export default function Live() {
           "Amazing quality",
           "First time here, loving it!"
         ];
-        
+
         if (Math.random() > 0.7) {
           const message = {
             id: Date.now().toString(),
@@ -118,7 +117,7 @@ export default function Live() {
   return (
     <div className="min-h-screen bg-background">
       <NavigationHeader />
-      
+
       <main className="pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Live Stream Interface */}
@@ -157,7 +156,7 @@ export default function Live() {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <Input
@@ -176,7 +175,7 @@ export default function Live() {
                         rows={3}
                       />
                     </div>
-                    
+
                     <div className="flex space-x-3">
                       {!isLive ? (
                         <Button 

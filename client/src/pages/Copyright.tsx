@@ -1,4 +1,3 @@
-
 import NavigationHeader from "@/components/NavigationHeader";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,7 @@ export default function Copyright() {
   return (
     <div className="min-h-screen bg-background">
       <NavigationHeader />
-      
+
       <main className="pt-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center mb-12">
@@ -41,7 +40,7 @@ export default function Copyright() {
                   <Shield className="w-5 h-5" />
                   <span>Copyright Infringement</span>
                 </CardTitle>
-              </CardHeader>
+              </Header>
               <CardContent className="prose dark:prose-invert max-w-none">
                 <p>If you believe your copyrighted work has been used without permission:</p>
                 <ul>
@@ -60,7 +59,7 @@ export default function Copyright() {
                   <Mail className="w-5 h-5" />
                   <span>How to File a DMCA Notice</span>
                 </CardTitle>
-              </CardHeader>
+              </Header>
               <CardContent className="prose dark:prose-invert max-w-none">
                 <p>Send your DMCA notice to:</p>
                 <ul>
@@ -77,7 +76,7 @@ export default function Copyright() {
                   <AlertCircle className="w-5 h-5" />
                   <span>Counter-Notification</span>
                 </CardTitle>
-              </CardHeader>
+              </Header>
               <CardContent className="prose dark:prose-invert max-w-none">
                 <p>
                   If you believe your content was removed in error, you may file a counter-notification. 

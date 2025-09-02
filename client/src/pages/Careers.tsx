@@ -1,4 +1,3 @@
-
 import NavigationHeader from "@/components/NavigationHeader";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,7 +60,7 @@ export default function Careers() {
   return (
     <div className="min-h-screen bg-background">
       <NavigationHeader />
-      
+
       <main className="pt-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Header */}
