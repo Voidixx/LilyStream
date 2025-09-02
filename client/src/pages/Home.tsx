@@ -47,13 +47,13 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('recommended');
-  
+
   // Check if we're on a specific route
   const [matchTrending] = useRoute('/trending');
   const [matchCategory] = useRoute('/category/:category');
   const [matchSearch] = useRoute('/search');
 
-  const { data: videos, isLoading } = useQuery({
+  const { data: videos, isLoading, refetch } = useQuery({
     queryKey: ['/api/videos', selectedCategory, searchQuery, activeTab],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -66,7 +66,7 @@ export default function Home() {
       if (activeTab === 'recommended') {
         params.append('fyp', 'true');
       }
-      
+
       const response = await fetch(`/api/videos?${params}`);
       if (!response.ok) throw new Error('Failed to fetch videos');
       return response.json();
@@ -87,9 +87,9 @@ export default function Home() {
   // Filter videos based on current view
   const getFilteredVideos = () => {
     if (!videos) return [];
-    
+
     let filtered = videos.filter((video: any) => video.privacy === 'public');
-    
+
     if (matchTrending) {
       // Sort by engagement for trending
       return filtered.sort((a: any, b: any) => {
@@ -98,11 +98,11 @@ export default function Home() {
         return bEngagement - aEngagement;
       }).slice(0, 50);
     }
-    
+
     if (selectedCategory && selectedCategory !== 'All') {
       filtered = filtered.filter((video: any) => video.category === selectedCategory);
     }
-    
+
     if (searchQuery) {
       filtered = filtered.filter((video: any) => 
         video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -110,7 +110,7 @@ export default function Home() {
         video.tags?.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
-    
+
     return filtered;
   };
 
@@ -119,7 +119,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <NavigationHeader onSearch={setSearchQuery} />
-      
+
       <main className="pt-16">
         {/* Quick Stats Bar - Mobile Responsive */}
         <section className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 text-white py-2 sm:py-3">
@@ -174,7 +174,7 @@ export default function Home() {
               </Badge>
             </div>
           </div>
-          
+
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="recommended" data-testid="tab-recommended">
@@ -194,7 +194,7 @@ export default function Home() {
                 Categories
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="categories" className="space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
                 {categories.map((category) => {
@@ -269,12 +269,12 @@ export default function Home() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredVideos.map((video: any) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+                {filteredVideos.map((video) => (
                   <VideoCard key={video.id} video={video} />
                 ))}
               </div>
-              
+
               {filteredVideos.length >= 8 && (
                 <div className="text-center mt-12">
                   <Button 
@@ -290,7 +290,7 @@ export default function Home() {
           )}
         </section>
       </main>
-      
+
       <Footer />
     </div>
   );

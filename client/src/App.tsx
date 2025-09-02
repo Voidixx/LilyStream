@@ -26,6 +26,10 @@ import Help from "@/pages/Help";
 import Contact from "@/pages/Contact";
 import EditProfile from "@/pages/EditProfile";
 import NotFound from "@/pages/not-found";
+import Safety from "@/pages/Safety";
+import Studio from "@/pages/Studio";
+import Live from "@/pages/Live";
+import ApiDocs from "@/pages/ApiDocs";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -44,8 +48,12 @@ function Router() {
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/about" component={About} />
       <Route path="/careers" component={Careers} />
-      <Route path="/press" component={Press} />
       <Route path="/blog" component={Blog} />
+      <Route path="/press" component={Press} />
+      <Route path="/safety" component={Safety} />
+      <Route path="/studio" component={Studio} />
+      <Route path="/live" component={Live} />
+      <Route path="/api-docs" component={ApiDocs} />
       <Route path="/guidelines" component={Guidelines} />
       <Route path="/copyright" component={Copyright} />
       <Route path="/help" component={Help} />

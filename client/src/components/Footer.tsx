@@ -51,9 +51,14 @@ export default function Footer() {
             <p className="text-xs sm:text-sm text-muted-foreground mb-4">
               The future of video sharing. Built for creators, designed for everyone.
             </p>
-            <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-              <Globe className="w-3 h-3" />
-              <span>Available worldwide</span>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                <Globe className="w-3 h-3" />
+                <span>Available worldwide</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Created by <span className="font-semibold">Lily Higby</span>
+              </div>
             </div>
           </div>
 
@@ -128,7 +133,7 @@ export default function Footer() {
             <p className="text-xs text-muted-foreground">
               LilyTube is committed to creating the most advanced video platform with features that surpass YouTube.
               <br />
-              Built with modern technology for creators worldwide.
+              Built with modern technology by Lily Higby for creators worldwide.
             </p>
             <div className="flex justify-center items-center space-x-4 mt-3">
               <span className="text-xs text-muted-foreground">Powered by AI</span>

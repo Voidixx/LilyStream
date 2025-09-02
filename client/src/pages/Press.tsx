@@ -176,3 +176,106 @@ export default function Press() {
     </div>
   );
 }
+import NavigationHeader from "@/components/NavigationHeader";
+import Footer from "@/components/Footer";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileText, Download, Mail, Calendar } from "lucide-react";
+
+export default function Press() {
+  return (
+    <div className="min-h-screen bg-background">
+      <NavigationHeader />
+      
+      <main className="pt-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <div className="w-20 h-20 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FileText className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">Press Center</h1>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Resources for journalists, bloggers, and media professionals covering LilyTube and the future of video sharing.
+            </p>
+          </div>
+
+          {/* Press Kit */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Press Kit</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold mb-3">Brand Assets</h3>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• High-resolution logos</li>
+                    <li>• Brand guidelines</li>
+                    <li>• Color palette</li>
+                    <li>• Screenshots</li>
+                  </ul>
+                  <Button className="mt-4" size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Assets
+                  </Button>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-3">Company Information</h3>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• Fact sheet</li>
+                    <li>• Executive bios</li>
+                    <li>• Platform statistics</li>
+                    <li>• Recent milestones</li>
+                  </ul>
+                  <Button className="mt-4" size="sm" variant="outline">
+                    <FileText className="w-4 h-4 mr-2" />
+                    View Fact Sheet
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Press */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Recent Press Coverage</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="border-l-4 border-primary pl-4">
+                  <h4 className="font-semibold">LilyTube Launches Revolutionary Creator Platform</h4>
+                  <p className="text-sm text-muted-foreground">TechCrunch • January 2025</p>
+                </div>
+                <div className="border-l-4 border-purple-600 pl-4">
+                  <h4 className="font-semibold">The Future of Video Sharing is Here</h4>
+                  <p className="text-sm text-muted-foreground">The Verge • December 2024</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contact */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Media Contact</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-4">
+                <Mail className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <p className="font-semibold">Press Inquiries</p>
+                  <p className="text-sm text-muted-foreground">press@lilytube.com</p>
+                  <p className="text-xs text-muted-foreground mt-1">Response within 48 hours</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}
