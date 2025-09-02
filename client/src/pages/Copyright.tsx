@@ -1,6 +1,6 @@
 
 import NavigationHeader from "@/components/NavigationHeader";
-import Footer from "@/components/Footer";
+import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Shield, AlertCircle, Mail } from "lucide-react";
 

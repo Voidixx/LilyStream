@@ -1,4 +1,3 @@
-
 import { NavigationHeader } from "@/components/NavigationHeader";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ export default function PressPage() {
   return (
     <div className="min-h-screen bg-background">
       <NavigationHeader />
-      
+
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">

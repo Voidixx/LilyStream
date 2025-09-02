@@ -1,6 +1,6 @@
 
 import NavigationHeader from "@/components/NavigationHeader";
-import Footer from "@/components/Footer";
+import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Users, Heart, AlertTriangle, CheckCircle } from "lucide-react";
 
