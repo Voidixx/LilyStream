@@ -16,29 +16,17 @@ import NotFound from "@/pages/not-found";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-500"></div>
-      </div>
-    );
-  }
-
+  // Guest users can browse everything, auth only required for specific actions
   return (
     <Switch>
-      {!isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/auth" component={Auth} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/watch/:id" component={Watch} />
-          <Route path="/upload" component={Upload} />
-          <Route path="/profile/:username?" component={Profile} />
-        </>
-      )}
+      <Route path="/" component={Home} />
+      <Route path="/watch/:id" component={Watch} />
+      <Route path="/upload" component={Upload} />
+      <Route path="/profile/:username?" component={Profile} />
+      <Route path="/auth" component={Auth} />
+      <Route path="/trending" component={Home} />
+      <Route path="/search" component={Home} />
+      <Route path="/category/:category" component={Home} />
       <Route component={NotFound} />
     </Switch>
   );

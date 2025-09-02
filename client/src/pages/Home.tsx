@@ -1,88 +1,214 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import NavigationHeader from "@/components/NavigationHeader";
 import VideoCard from "@/components/VideoCard";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  TrendingUp, 
+  Clock, 
+  Eye, 
+  ThumbsUp, 
+  Play, 
+  Upload,
+  Zap,
+  Star,
+  Flame,
+  Users,
+  Music,
+  Gamepad2,
+  GraduationCap,
+  Plane,
+  ChefHat,
+  Laptop
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { format, formatDistance } from "date-fns";
 
-const categories = ['All', 'Gaming', 'Technology', 'Education', 'Music', 'Travel', 'Cooking'];
+const categories = [
+  { name: 'All', icon: Play, color: 'bg-gray-500' },
+  { name: 'Trending', icon: TrendingUp, color: 'bg-red-500' },
+  { name: 'Gaming', icon: Gamepad2, color: 'bg-purple-500' },
+  { name: 'Music', icon: Music, color: 'bg-pink-500' },
+  { name: 'Education', icon: GraduationCap, color: 'bg-blue-500' },
+  { name: 'Technology', icon: Laptop, color: 'bg-green-500' },
+  { name: 'Travel', icon: Plane, color: 'bg-cyan-500' },
+  { name: 'Cooking', icon: ChefHat, color: 'bg-orange-500' },
+];
 
 export default function Home() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('recommended');
+  
+  // Check if we're on a specific route
+  const [matchTrending] = useRoute('/trending');
+  const [matchCategory] = useRoute('/category/:category');
+  const [matchSearch] = useRoute('/search');
 
-  const { data: videos, isLoading, refetch } = useQuery({
-    queryKey: ['/api/videos'],
+  const { data: videos, isLoading } = useQuery({
+    queryKey: ['/api/videos', selectedCategory, searchQuery],
     enabled: true,
   });
 
-  const filteredVideos = videos?.filter((video: any) => {
-    const categoryMatch = selectedCategory === 'All' || video.category === selectedCategory;
-    const searchMatch = !searchQuery || 
-      video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      video.description?.toLowerCase().includes(searchQuery.toLowerCase());
+  const { data: trendingVideos } = useQuery({
+    queryKey: ['/api/videos/trending'],
+    enabled: true,
+  });
+
+  const { data: categoryStats } = useQuery({
+    queryKey: ['/api/categories/stats'],
+    enabled: true,
+  });
+
+  // Filter videos based on current view
+  const getFilteredVideos = () => {
+    if (!videos) return [];
     
-    return categoryMatch && searchMatch && video.privacy === 'public';
-  }) || [];
+    let filtered = videos.filter((video: any) => video.privacy === 'public');
+    
+    if (matchTrending) {
+      // Sort by engagement for trending
+      return filtered.sort((a: any, b: any) => {
+        const aEngagement = (a.views * 0.4) + (a.likes * 2) + (a.comments * 3);
+        const bEngagement = (b.views * 0.4) + (b.likes * 2) + (b.comments * 3);
+        return bEngagement - aEngagement;
+      }).slice(0, 50);
+    }
+    
+    if (selectedCategory && selectedCategory !== 'All') {
+      filtered = filtered.filter((video: any) => video.category === selectedCategory);
+    }
+    
+    if (searchQuery) {
+      filtered = filtered.filter((video: any) => 
+        video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        video.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        video.tags?.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+    
+    return filtered;
+  };
+
+  const filteredVideos = getFilteredVideos();
 
   return (
     <div className="min-h-screen bg-background">
       <NavigationHeader onSearch={setSearchQuery} />
       
       <main className="pt-16">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden">
-          <div 
-            className="absolute inset-0 bg-gradient-to-r from-primary/90 to-purple-600/90"
-            style={{
-              backgroundImage: "url('https://images.unsplash.com/photo-1519501025264-65ba15a82390?ixlib=rb-4.0.3&auto=format&fit=crop&w=2464&h=1000')",
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
-          />
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-            <div className="text-center text-white fade-in">
-              <h1 className="text-5xl md:text-6xl font-bold mb-6">
-                Welcome to LilyTube
-              </h1>
-              <p className="text-xl md:text-2xl mb-8 opacity-90">
-                Your personal premium video streaming experience
-              </p>
-              <Button 
-                onClick={() => setLocation('/upload')}
-                className="bg-white text-primary px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105"
-                data-testid="upload-first-video-button"
-              >
-                <Upload className="w-5 h-5 mr-2" />
-                Upload Your First Video
-              </Button>
+        {/* Quick Stats Bar */}
+        <section className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 text-white py-3">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center space-x-6">
+                <div className="flex items-center space-x-1">
+                  <Play className="w-4 h-4" />
+                  <span>{filteredVideos.length} videos available</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Users className="w-4 h-4" />
+                  <span>Join thousands of creators</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Zap className="w-4 h-4" />
+                  <span>Fair algorithm for everyone</span>
+                </div>
+              </div>
+              <div className="hidden md:flex items-center space-x-4">
+                {!user && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="border-white/20 text-white hover:bg-white/10"
+                    onClick={() => setLocation('/auth')}
+                    data-testid="quick-login-button"
+                  >
+                    Login to Upload
+                  </Button>
+                )}
+                <span className="text-xs opacity-75">© 2025 LilyTube</span>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Category Filters */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-wrap gap-3">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-6 py-2 rounded-full font-medium transition-colors ${
-                  selectedCategory === category
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-accent'
-                }`}
-                data-testid={`category-${category.toLowerCase()}`}
-              >
-                {category}
-              </button>
-            ))}
+        {/* Enhanced Category Navigation */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">Discover Amazing Content</h2>
+            <div className="hidden md:flex items-center space-x-2">
+              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                <Star className="w-3 h-3 mr-1" />
+                New Algorithm
+              </Badge>
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                <Zap className="w-3 h-3 mr-1" />
+                Fair Discovery
+              </Badge>
+            </div>
           </div>
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
+              <TabsTrigger value="recommended" data-testid="tab-recommended">
+                <Flame className="w-4 h-4 mr-2" />
+                For You
+              </TabsTrigger>
+              <TabsTrigger value="trending" data-testid="tab-trending">
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Trending
+              </TabsTrigger>
+              <TabsTrigger value="latest" data-testid="tab-latest">
+                <Clock className="w-4 h-4 mr-2" />
+                Latest
+              </TabsTrigger>
+              <TabsTrigger value="categories" data-testid="tab-categories">
+                <Play className="w-4 h-4 mr-2" />
+                Categories
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="categories" className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+                {categories.map((category) => {
+                  const Icon = category.icon;
+                  return (
+                    <button
+                      key={category.name}
+                      onClick={() => {
+                        setSelectedCategory(category.name);
+                        setActiveTab('recommended');
+                      }}
+                      className={`group relative overflow-hidden rounded-xl p-4 text-center transition-all duration-300 hover:scale-105 ${
+                        selectedCategory === category.name
+                          ? 'bg-primary text-primary-foreground shadow-lg'
+                          : 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 hover:shadow-md'
+                      }`}
+                      data-testid={`category-${category.name.toLowerCase()}`}
+                    >
+                      <div className={`w-8 h-8 mx-auto mb-2 rounded-lg ${category.color} flex items-center justify-center text-white`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-medium">{category.name}</span>
+                      {categoryStats?.[category.name] && (
+                        <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                          {categoryStats[category.name]}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </TabsContent>
+          </Tabs>
         </section>
 
         {/* Videos Grid */}

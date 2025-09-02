@@ -10,9 +10,10 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Play, Search, Plus, Bell, Moon, Sun, User, Upload, LogOut } from "lucide-react";
+import { Play, Search, Plus, Bell, Moon, Sun, User, Upload, LogOut, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/ThemeProvider";
+import { GuestPrompt, useGuestPrompt } from "./GuestPrompt";
 
 interface NavigationHeaderProps {
   onSearch?: (query: string) => void;
@@ -24,6 +25,15 @@ export default function NavigationHeader({ onSearch }: NavigationHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const { currentPrompt, showPrompt, hidePrompt } = useGuestPrompt();
+  
+  const handleFeatureClick = (feature: "upload" | "like" | "comment" | "subscribe" | "save" | "history", action: () => void) => {
+    if (user) {
+      action();
+    } else {
+      showPrompt(feature);
+    }
+  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -107,87 +117,160 @@ export default function NavigationHeader({ onSearch }: NavigationHeaderProps) {
             </Button>
 
             <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setLocation('/upload')}
-              className="hover:bg-muted"
+              onClick={() => handleFeatureClick('upload', () => setLocation('/upload'))}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4"
               data-testid="upload-button"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4 mr-2" />
+              {user ? 'Upload' : 'Upload Video'}
             </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-muted"
-              data-testid="notifications-button"
-            >
-              <Bell className="w-5 h-5" />
-            </Button>
+            {user && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-muted relative"
+                data-testid="notifications-button"
+              >
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+              </Button>
+            )}
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  className="relative h-8 w-8 rounded-full"
-                  data-testid="user-menu-button"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.profileImageUrl} />
-                    <AvatarFallback>
-                      {user?.firstName?.[0] || user?.email?.[0] || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end">
-                <div className="flex items-center space-x-2 p-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.profileImageUrl} />
-                    <AvatarFallback>
-                      {user?.firstName?.[0] || user?.email?.[0] || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-medium">
-                      {user?.firstName && user?.lastName
-                        ? `${user.firstName} ${user.lastName}`
-                        : user?.email || 'Unknown User'
-                      }
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {user?.email}
-                    </p>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="relative h-10 w-10 rounded-full"
+                    data-testid="user-menu-button"
+                  >
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={user.profileImageUrl || undefined} />
+                      <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+                        {user.firstName && user.lastName 
+                          ? `${user.firstName[0]}${user.lastName[0]}`
+                          : user.username?.slice(0, 2).toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'
+                        }
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-64" align="end">
+                  <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={user.profileImageUrl || undefined} />
+                      <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+                        {user.firstName && user.lastName 
+                          ? `${user.firstName[0]}${user.lastName[0]}`
+                          : user.username?.slice(0, 2).toUpperCase() || 'U'
+                        }
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium">
+                        {user.firstName && user.lastName
+                          ? `${user.firstName} ${user.lastName}`
+                          : user.username || 'User'
+                        }
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        @{user.username || 'user'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {user.subscriberCount || 0} subscribers
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={() => setLocation('/profile')}
-                  data-testid="profile-menu-item"
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => setLocation(`/profile/${user.username}`)}
+                    data-testid="profile-menu-item"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Your Channel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setLocation('/upload')}
+                    data-testid="upload-menu-item"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Video
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleFeatureClick('history', () => setLocation('/history'))}
+                    data-testid="history-menu-item"
+                  >
+                    <Play className="mr-2 h-4 w-4" />
+                    Watch History
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      localStorage.removeItem('user');
+                      setLocation('/auth');
+                    }}
+                    data-testid="logout-menu-item"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" data-testid="guest-menu">
+                      <Menu className="w-5 h-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end">
+                    <div className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
+                      <p className="font-medium text-sm">Browse as Guest</p>
+                      <p className="text-xs text-muted-foreground">Sign in for more features</p>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setLocation('/auth')} data-testid="sign-in-menu">
+                      <User className="mr-2 h-4 w-4" />
+                      Sign In / Join
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => showPrompt('upload')} data-testid="upload-menu-guest">
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload Video
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem disabled>
+                      <Bell className="mr-2 h-4 w-4 opacity-50" />
+                      Notifications (Sign in required)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem disabled>
+                      <Play className="mr-2 h-4 w-4 opacity-50" />
+                      Watch History (Sign in required)
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => setLocation('/auth')}
+                  className="hidden sm:inline-flex"
+                  data-testid="sign-in-button"
                 >
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setLocation('/upload')}
-                  data-testid="upload-menu-item"
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={() => window.location.href = '/api/logout'}
-                  data-testid="logout-menu-item"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  Sign In
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
+      {/* Guest Prompts */}
+      {currentPrompt && (
+        <GuestPrompt 
+          feature={currentPrompt} 
+          onClose={hidePrompt}
+        />
+      )}
     </nav>
   );
 }

@@ -132,6 +132,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Trending videos API
+  app.get('/api/videos/trending', async (req, res) => {
+    try {
+      const videos = await storage.getVideos();
+      // Sort by engagement score (views + likes*2 + comments*3)
+      const trending = videos
+        .map(video => ({
+          ...video,
+          engagementScore: (video.views || 0) + (video.likes || 0) * 2 + (video.comments || 0) * 3
+        }))
+        .sort((a, b) => b.engagementScore - a.engagementScore)
+        .slice(0, 50);
+      
+      // Add user info to each video
+      const videosWithUsers = await Promise.all(trending.map(async (video) => {
+        const user = await storage.getUser(video.userId);
+        return {
+          ...video,
+          user: user ? {
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            profileImageUrl: user.profileImageUrl,
+          } : null,
+        };
+      }));
+      
+      res.json(videosWithUsers);
+    } catch (error) {
+      console.error("Error fetching trending videos:", error);
+      res.status(500).json({ message: "Failed to fetch trending videos" });
+    }
+  });
+
+  // User profile APIs
+  app.get('/api/users/:username', async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername(req.params.username);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Don't expose sensitive information
+      const publicUser = {
+        id: user.id,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        displayName: user.displayName,
+        bio: user.bio,
+        location: user.location,
+        website: user.website,
+        profileImageUrl: user.profileImageUrl,
+        bannerImageUrl: user.bannerImageUrl,
+        subscriberCount: user.subscriberCount,
+        videoCount: user.videoCount,
+        totalViews: user.totalViews,
+        isVerified: user.isVerified,
+        createdAt: user.createdAt,
+      };
+      
+      res.json(publicUser);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
+
+  app.get('/api/users/:username/videos', async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername(req.params.username);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const videos = await storage.getVideos(user.id);
+      // Only show public videos for profile viewing
+      const publicVideos = videos.filter(video => video.privacy === 'public');
+      
+      res.json(publicVideos);
+    } catch (error) {
+      console.error("Error fetching user videos:", error);
+      res.status(500).json({ message: "Failed to fetch user videos" });
+    }
+  });
+
+  app.get('/api/users/:username/playlists', async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername(req.params.username);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // TODO: Implement playlists when storage supports it
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching user playlists:", error);
+      res.status(500).json({ message: "Failed to fetch user playlists" });
+    }
+  });
+
+  // Category stats API
+  app.get('/api/categories/stats', async (req, res) => {
+    try {
+      const videos = await storage.getVideos();
+      const stats: Record<string, number> = {};
+      
+      videos.forEach(video => {
+        if (video.category) {
+          stats[video.category] = (stats[video.category] || 0) + 1;
+        }
+      });
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching category stats:", error);
+      res.status(500).json({ message: "Failed to fetch category stats" });
+    }
+  });
+
   app.get('/api/videos/:id', async (req, res) => {
     try {
       const video = await storage.getVideo(req.params.id);
