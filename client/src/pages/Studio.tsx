@@ -140,12 +140,44 @@ export default function Studio() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Professional live streaming with advanced features.
                 </p>
-                <ul className="text-sm space-y-1">
+                <ul className="text-sm space-y-1 mb-4">
                   <li>• HD/4K streaming</li>
                   <li>• Multi-camera support</li>
                   <li>• Stream scheduling</li>
                   <li>• Real-time chat</li>
                 </ul>
+                <Button 
+                  className="w-full" 
+                  onClick={() => window.location.href = '/live'}
+                >
+                  Start Streaming
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Calendar className="w-5 h-5" />
+                  <span>Scheduled Uploads</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Manage your scheduled video uploads and publishing queue.
+                </p>
+                <ul className="text-sm space-y-1 mb-4">
+                  <li>• Schedule videos for optimal timing</li>
+                  <li>• Batch upload management</li>
+                  <li>• Auto-publish at set times</li>
+                  <li>• Edit scheduled content</li>
+                </ul>
+                <Button 
+                  className="w-full" 
+                  onClick={() => window.location.href = '/scheduled-uploads'}
+                >
+                  Manage Scheduled
+                </Button>
               </CardContent>
             </Card>
           </div>

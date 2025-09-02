@@ -176,10 +176,6 @@ export default function Press() {
     </div>
   );
 }
-import NavigationHeader from "@/components/NavigationHeader";
-import Footer from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { FileText, Download, Mail, Calendar } from "lucide-react";
 
 export default function Press() {

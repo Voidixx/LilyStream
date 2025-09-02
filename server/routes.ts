@@ -225,6 +225,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Scheduled videos routes
+  app.get('/api/videos/scheduled', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const scheduledVideos = await storage.getScheduledVideos(userId);
+      res.json(scheduledVideos);
+    } catch (error) {
+      console.error("Error fetching scheduled videos:", error);
+      res.status(500).json({ message: "Failed to fetch scheduled videos" });
+    }
+  });
+
+  app.post('/api/videos/:id/publish-now', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const video = await storage.getVideo(req.params.id);
+      
+      if (!video || video.userId !== userId) {
+        return res.status(404).json({ message: "Video not found or unauthorized" });
+      }
+      
+      const updatedVideo = await storage.updateVideo(req.params.id, {
+        status: 'published',
+        publishedAt: new Date().toISOString(),
+      });
+      
+      res.json(updatedVideo);
+    } catch (error) {
+      console.error("Error publishing video now:", error);
+      res.status(500).json({ message: "Failed to publish video" });
+    }
+  });
+
   // Video routes
   app.get('/api/videos', async (req, res) => {
     try {

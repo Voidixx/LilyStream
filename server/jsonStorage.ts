@@ -44,6 +44,14 @@ interface DatabaseFile {
 export class JsonStorage {
   private dataPath = join(process.cwd(), 'database.json');
   private adminCreated = false;
+  private data!: DatabaseFile; // Initialize data property
+
+  // Ensure data is loaded
+  private async ensureInitialized(): Promise<void> {
+    if (!this.data) {
+      this.data = this.loadData();
+    }
+  }
 
   private loadData(): DatabaseFile {
     if (!existsSync(this.dataPath)) {
@@ -78,13 +86,18 @@ export class JsonStorage {
       return JSON.parse(fileContent);
     } catch (error) {
       console.error('Error reading database file:', error);
-      return this.loadData(); // Return default data if corrupted
+      // Attempt to recover by returning empty data or default data
+      const defaultData: DatabaseFile = {
+        users: [], videos: [], comments: [], likes: [], subscriptions: [], notifications: [], reports: [], userSettings: [], watchHistory: [], algorithmData: [], categories: [], playlists: [], videoProgress: []
+      };
+      return defaultData;
     }
   }
 
   private saveData(data: DatabaseFile): void {
     try {
       writeFileSync(this.dataPath, JSON.stringify(data, null, 2));
+      this.data = data; // Update in-memory data
     } catch (error) {
       console.error('Error saving database file:', error);
     }
@@ -105,27 +118,26 @@ export class JsonStorage {
 
   // User operations
   async getUser(id: string): Promise<User | undefined> {
-    const data = this.loadData();
-    return data.users.find(user => user.id === id);
+    await this.ensureInitialized();
+    return this.data.users.find(user => user.id === id);
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const data = this.loadData();
-    return data.users.find(user => user.username === username);
+    await this.ensureInitialized();
+    return this.data.users.find(user => user.username === username);
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const data = this.loadData();
-    return data.users.find(user => user.email === email);
+    await this.ensureInitialized();
+    return this.data.users.find(user => user.email === email);
   }
 
   async createUser(userData: RegisterUser): Promise<User> {
-    const data = this.loadData();
+    await this.ensureInitialized();
     const hashedPassword = await this.hashPassword(userData.password);
-    
-    // Check if this is the first user and make them admin
-    const isFirstUser = data.users.length === 0;
-    
+
+    const isFirstUser = this.data.users.length === 0;
+
     const user: User = {
       id: nanoid(),
       username: userData.username,
@@ -143,7 +155,7 @@ export class JsonStorage {
       videoCount: 0,
       totalViews: 0,
       isVerified: false,
-      isAdmin: isFirstUser, // First user becomes admin
+      isAdmin: isFirstUser,
       isModerator: false,
       isBanned: false,
       banReason: null,
@@ -152,9 +164,8 @@ export class JsonStorage {
       updatedAt: new Date()
     };
 
-    data.users.push(user);
-    
-    // Create default user settings
+    this.data.users.push(user);
+
     const userSettings: UserSettings = {
       id: nanoid(),
       userId: user.id,
@@ -170,47 +181,47 @@ export class JsonStorage {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    
-    data.userSettings.push(userSettings);
-    
-    this.saveData(data);
-    
+
+    this.data.userSettings.push(userSettings);
+
+    this.saveData(this.data);
+
     if (isFirstUser) {
       console.log(`🎉 First user created as admin: ${user.username}`);
     }
-    
+
     return user;
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
-    const data = this.loadData();
-    const userIndex = data.users.findIndex(user => user.id === id);
-    
+    await this.ensureInitialized();
+    const userIndex = this.data.users.findIndex(user => user.id === id);
+
     if (userIndex === -1) return undefined;
-    
-    data.users[userIndex] = { ...data.users[userIndex], ...updates, updatedAt: new Date() };
-    this.saveData(data);
-    
-    return data.users[userIndex];
+
+    this.data.users[userIndex] = { ...this.data.users[userIndex], ...updates, updatedAt: new Date() };
+    this.saveData(this.data);
+
+    return this.data.users[userIndex];
   }
 
   // Admin operations
   async getAllUsers(page = 1, limit = 50, search = ""): Promise<{ users: User[]; total: number }> {
-    const data = this.loadData();
-    let users = data.users;
-    
+    await this.ensureInitialized();
+    let users = this.data.users;
+
     if (search) {
       const searchLower = search.toLowerCase();
-      users = users.filter(user => 
+      users = users.filter(user =>
         user.username.toLowerCase().includes(searchLower) ||
         user.email.toLowerCase().includes(searchLower) ||
         user.displayName?.toLowerCase().includes(searchLower)
       );
     }
-    
+
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-    
+
     return {
       users: users.slice(startIndex, endIndex),
       total: users.length
@@ -218,24 +229,24 @@ export class JsonStorage {
   }
 
   async getAllVideos(page = 1, limit = 50, search = "", status = ""): Promise<{ videos: Video[]; total: number }> {
-    const data = this.loadData();
-    let videos = data.videos;
-    
+    await this.ensureInitialized();
+    let videos = this.data.videos;
+
     if (search) {
       const searchLower = search.toLowerCase();
-      videos = videos.filter(video => 
+      videos = videos.filter(video =>
         video.title.toLowerCase().includes(searchLower) ||
         video.description?.toLowerCase().includes(searchLower)
       );
     }
-    
+
     if (status && status !== 'all') {
       videos = videos.filter(video => video.status === status);
     }
-    
+
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-    
+
     return {
       videos: videos.slice(startIndex, endIndex),
       total: videos.length
@@ -243,19 +254,19 @@ export class JsonStorage {
   }
 
   async getAllComments(page = 1, limit = 50, search = ""): Promise<{ comments: Comment[]; total: number }> {
-    const data = this.loadData();
-    let comments = data.comments;
-    
+    await this.ensureInitialized();
+    let comments = this.data.comments;
+
     if (search) {
       const searchLower = search.toLowerCase();
-      comments = comments.filter(comment => 
+      comments = comments.filter(comment =>
         comment.content.toLowerCase().includes(searchLower)
       );
     }
-    
+
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-    
+
     return {
       comments: comments.slice(startIndex, endIndex),
       total: comments.length
@@ -263,39 +274,37 @@ export class JsonStorage {
   }
 
   async getAnalytics(): Promise<any> {
-    const data = this.loadData();
-    
+    await this.ensureInitialized();
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
-    const newUsersToday = data.users.filter(user => 
+
+    const newUsersToday = this.data.users.filter(user =>
       user.createdAt && new Date(user.createdAt) >= today
     ).length;
-    
-    const newVideosToday = data.videos.filter(video => 
+
+    const newVideosToday = this.data.videos.filter(video =>
       video.createdAt && new Date(video.createdAt) >= today
     ).length;
-    
-    const totalViews = data.videos.reduce((sum, video) => sum + (video.views || 0), 0);
-    const totalLikes = data.videos.reduce((sum, video) => sum + (video.likes || 0), 0);
-    
+
+    const totalViews = this.data.videos.reduce((sum, video) => sum + (video.views || 0), 0);
+    const totalLikes = this.data.videos.reduce((sum, video) => sum + (video.likes || 0), 0);
+
     return {
-      totalUsers: data.users.length,
-      totalVideos: data.videos.length,
-      totalComments: data.comments.length,
+      totalUsers: this.data.users.length,
+      totalVideos: this.data.videos.length,
+      totalComments: this.data.comments.length,
       newUsersToday,
       newVideosToday,
       totalViews,
       totalLikes,
-      totalSubscriptions: data.subscriptions.length,
-      totalPlaylists: data.playlists.length
+      totalSubscriptions: this.data.subscriptions.length,
+      totalPlaylists: this.data.playlists.length
     };
   }
 
   // Video operations
   async createVideo(video: InsertVideo): Promise<Video> {
-    const data = this.loadData();
-    
+    await this.ensureInitialized();
     const newVideo: Video = {
       ...video,
       id: nanoid(),
@@ -321,44 +330,44 @@ export class JsonStorage {
       moderatedBy: null,
       moderatedAt: null,
       publishedAt: video.status === 'published' ? new Date() : null,
+      scheduledAt: video.status === 'scheduled' ? new Date(video.scheduledAt!) : null,
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    
-    data.videos.push(newVideo);
-    this.saveData(data);
-    
+
+    this.data.videos.push(newVideo);
+    this.saveData(this.data);
+
     return newVideo;
   }
 
   async getVideo(id: string): Promise<Video | undefined> {
-    const data = this.loadData();
-    return data.videos.find(video => video.id === id);
+    await this.ensureInitialized();
+    return this.data.videos.find(video => video.id === id);
   }
 
   async getVideos(userId?: string, category?: string, search?: string, fyp = false): Promise<Video[]> {
-    const data = this.loadData();
-    let videos = data.videos.filter(video => video.privacy === 'public' && video.status === 'published');
-    
+    await this.ensureInitialized();
+    let videos = this.data.videos.filter(video => video.privacy === 'public' && video.status === 'published');
+
     if (userId) {
       videos = videos.filter(video => video.userId === userId);
     }
-    
+
     if (category && category !== 'All') {
       videos = videos.filter(video => video.category === category);
     }
-    
+
     if (search) {
       const searchLower = search.toLowerCase();
-      videos = videos.filter(video => 
+      videos = videos.filter(video =>
         video.title.toLowerCase().includes(searchLower) ||
         video.description?.toLowerCase().includes(searchLower) ||
         video.tags?.some(tag => tag.toLowerCase().includes(searchLower))
       );
     }
-    
+
     if (fyp) {
-      // Advanced fair algorithm - mix of engagement, recency, and randomness
       videos = videos.sort((a, b) => {
         const aScore = (a.algorithmScore || 100) * 0.3 + (a.engagementRate || 0) * 0.2 + Math.random() * 0.5;
         const bScore = (b.algorithmScore || 100) * 0.3 + (b.engagementRate || 0) * 0.2 + Math.random() * 0.5;
@@ -367,53 +376,59 @@ export class JsonStorage {
     } else {
       videos = videos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
-    
+
     return videos.slice(0, 50);
   }
 
+  // Add scheduled videos methods
+  async getScheduledVideos(userId: string): Promise<Video[]> {
+    await this.ensureInitialized();
+    return this.data.videos.filter(video =>
+      video.userId === userId && video.status === 'scheduled'
+    ).sort((a, b) => new Date(a.scheduledAt || 0).getTime() - new Date(b.scheduledAt || 0).getTime());
+  }
+
   async updateVideo(id: string, updates: Partial<Video>): Promise<Video | undefined> {
-    const data = this.loadData();
-    const videoIndex = data.videos.findIndex(video => video.id === id);
-    
+    await this.ensureInitialized();
+    const videoIndex = this.data.videos.findIndex(video => video.id === id);
+
     if (videoIndex === -1) return undefined;
-    
-    data.videos[videoIndex] = { ...data.videos[videoIndex], ...updates, updatedAt: new Date() };
-    this.saveData(data);
-    
-    return data.videos[videoIndex];
+
+    this.data.videos[videoIndex] = { ...this.data.videos[videoIndex], ...updates, updatedAt: new Date() };
+    this.saveData(this.data);
+
+    return this.data.videos[videoIndex];
   }
 
   async deleteVideo(id: string): Promise<boolean> {
-    const data = this.loadData();
-    const videoIndex = data.videos.findIndex(video => video.id === id);
-    
+    await this.ensureInitialized();
+    const videoIndex = this.data.videos.findIndex(video => video.id === id);
+
     if (videoIndex === -1) return false;
-    
-    data.videos.splice(videoIndex, 1);
-    this.saveData(data);
-    
+
+    this.data.videos.splice(videoIndex, 1);
+    this.saveData(this.data);
+
     return true;
   }
 
   async incrementViews(id: string): Promise<void> {
-    const data = this.loadData();
-    const video = data.videos.find(video => video.id === id);
-    
+    await this.ensureInitialized();
+    const video = this.data.videos.find(video => video.id === id);
+
     if (video) {
       video.views = (video.views || 0) + 1;
-      this.saveData(data);
+      this.saveData(this.data);
     }
   }
 
   // Subscription operations  
   async subscribe(subscriberId: string, channelId: string): Promise<void> {
-    const data = this.loadData();
-    
-    // Check if already subscribed
-    const existing = data.subscriptions.find(sub => 
+    await this.ensureInitialized();
+    const existing = this.data.subscriptions.find(sub =>
       sub.subscriberId === subscriberId && sub.channelId === channelId
     );
-    
+
     if (!existing) {
       const subscription: Subscription = {
         id: nanoid(),
@@ -422,54 +437,51 @@ export class JsonStorage {
         notificationsEnabled: true,
         createdAt: new Date()
       };
-      
-      data.subscriptions.push(subscription);
-      
-      // Update subscriber count
-      const channel = data.users.find(user => user.id === channelId);
+
+      this.data.subscriptions.push(subscription);
+
+      const channel = this.data.users.find(user => user.id === channelId);
       if (channel) {
         channel.subscriberCount = (channel.subscriberCount || 0) + 1;
       }
-      
-      this.saveData(data);
+
+      this.saveData(this.data);
     }
   }
 
   async unsubscribe(subscriberId: string, channelId: string): Promise<void> {
-    const data = this.loadData();
-    const subIndex = data.subscriptions.findIndex(sub => 
+    await this.ensureInitialized();
+    const subIndex = this.data.subscriptions.findIndex(sub =>
       sub.subscriberId === subscriberId && sub.channelId === channelId
     );
-    
+
     if (subIndex !== -1) {
-      data.subscriptions.splice(subIndex, 1);
-      
-      // Update subscriber count
-      const channel = data.users.find(user => user.id === channelId);
+      this.data.subscriptions.splice(subIndex, 1);
+
+      const channel = this.data.users.find(user => user.id === channelId);
       if (channel) {
         channel.subscriberCount = Math.max(0, (channel.subscriberCount || 0) - 1);
       }
-      
-      this.saveData(data);
+
+      this.saveData(this.data);
     }
   }
 
   async getSubscriptions(userId: string): Promise<Subscription[]> {
-    const data = this.loadData();
-    return data.subscriptions.filter(sub => sub.subscriberId === userId);
+    await this.ensureInitialized();
+    return this.data.subscriptions.filter(sub => sub.subscriberId === userId);
   }
 
   async isSubscribed(subscriberId: string, channelId: string): Promise<boolean> {
-    const data = this.loadData();
-    return data.subscriptions.some(sub => 
+    await this.ensureInitialized();
+    return this.data.subscriptions.some(sub =>
       sub.subscriberId === subscriberId && sub.channelId === channelId
     );
   }
 
   // Comment operations
   async createComment(comment: InsertComment): Promise<Comment> {
-    const data = this.loadData();
-    
+    await this.ensureInitialized();
     const newComment: Comment = {
       ...comment,
       id: nanoid(),
@@ -485,66 +497,59 @@ export class JsonStorage {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    
-    data.comments.push(newComment);
-    
-    // Update video comment count
-    const video = data.videos.find(v => v.id === comment.videoId);
+
+    this.data.comments.push(newComment);
+
+    const video = this.data.videos.find(v => v.id === comment.videoId);
     if (video) {
       video.comments = (video.comments || 0) + 1;
     }
-    
-    this.saveData(data);
-    
+
+    this.saveData(this.data);
+
     return newComment;
   }
 
   async getComments(videoId: string): Promise<Comment[]> {
-    const data = this.loadData();
-    return data.comments
+    await this.ensureInitialized();
+    return this.data.comments
       .filter(comment => comment.videoId === videoId)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   async deleteComment(id: string): Promise<boolean> {
-    const data = this.loadData();
-    const commentIndex = data.comments.findIndex(comment => comment.id === id);
-    
+    await this.ensureInitialized();
+    const commentIndex = this.data.comments.findIndex(comment => comment.id === id);
+
     if (commentIndex === -1) return false;
-    
-    const comment = data.comments[commentIndex];
-    data.comments.splice(commentIndex, 1);
-    
-    // Update video comment count
-    const video = data.videos.find(v => v.id === comment.videoId);
+
+    const comment = this.data.comments[commentIndex];
+    this.data.comments.splice(commentIndex, 1);
+
+    const video = this.data.videos.find(v => v.id === comment.videoId);
     if (video) {
       video.comments = Math.max(0, (video.comments || 0) - 1);
     }
-    
-    this.saveData(data);
-    
+
+    this.saveData(this.data);
+
     return true;
   }
 
   // Like operations
   async toggleLike(userId: string, videoId?: string, commentId?: string, type: 'like' | 'dislike'): Promise<void> {
-    const data = this.loadData();
-    
-    // Find existing like
-    const existingLike = data.likes.find(like =>
+    await this.ensureInitialized();
+    const existingLike = this.data.likes.find(like =>
       like.userId === userId &&
       (videoId ? like.videoId === videoId : like.commentId === commentId)
     );
-    
+
     if (existingLike) {
       if (existingLike.type === type) {
-        // Remove like/dislike
-        const likeIndex = data.likes.indexOf(existingLike);
-        data.likes.splice(likeIndex, 1);
-        
-        // Update counts
+        this.data.likes.splice(this.data.likes.indexOf(existingLike), 1);
+
         if (videoId) {
-          const video = data.videos.find(v => v.id === videoId);
+          const video = this.data.videos.find(v => v.id === videoId);
           if (video) {
             if (type === 'like') {
               video.likes = Math.max(0, (video.likes || 0) - 1);
@@ -554,12 +559,10 @@ export class JsonStorage {
           }
         }
       } else {
-        // Change like to dislike or vice versa
         existingLike.type = type;
-        
-        // Update counts
+
         if (videoId) {
-          const video = data.videos.find(v => v.id === videoId);
+          const video = this.data.videos.find(v => v.id === videoId);
           if (video) {
             if (type === 'like') {
               video.likes = (video.likes || 0) + 1;
@@ -572,7 +575,6 @@ export class JsonStorage {
         }
       }
     } else {
-      // Create new like/dislike
       const newLike: Like = {
         id: nanoid(),
         userId,
@@ -581,12 +583,11 @@ export class JsonStorage {
         type,
         createdAt: new Date()
       };
-      
-      data.likes.push(newLike);
-      
-      // Update counts
+
+      this.data.likes.push(newLike);
+
       if (videoId) {
-        const video = data.videos.find(v => v.id === videoId);
+        const video = this.data.videos.find(v => v.id === videoId);
         if (video) {
           if (type === 'like') {
             video.likes = (video.likes || 0) + 1;
@@ -596,13 +597,13 @@ export class JsonStorage {
         }
       }
     }
-    
-    this.saveData(data);
+
+    this.saveData(this.data);
   }
 
   async getUserLike(userId: string, videoId?: string, commentId?: string): Promise<Like | undefined> {
-    const data = this.loadData();
-    return data.likes.find(like =>
+    await this.ensureInitialized();
+    return this.data.likes.find(like =>
       like.userId === userId &&
       (videoId ? like.videoId === videoId : like.commentId === commentId)
     );
@@ -610,30 +611,26 @@ export class JsonStorage {
 
   // Advanced analytics for creators
   async getAdvancedAnalytics(userId: string): Promise<any> {
-    const data = this.loadData();
-    const userVideos = data.videos.filter(video => video.userId === userId);
-    
+    await this.ensureInitialized();
+    const userVideos = this.data.videos.filter(video => video.userId === userId);
+
     const totalViews = userVideos.reduce((sum, video) => sum + (video.views || 0), 0);
     const totalLikes = userVideos.reduce((sum, video) => sum + (video.likes || 0), 0);
     const totalComments = userVideos.reduce((sum, video) => sum + (video.comments || 0), 0);
-    
-    // Calculate engagement rate
+
     const engagementRate = totalViews > 0 ? ((totalLikes + totalComments) / totalViews) * 100 : 0;
-    
-    // Top performing videos
+
     const topVideos = userVideos
       .sort((a, b) => (b.views || 0) - (a.views || 0))
       .slice(0, 5);
-    
-    // View trends (last 30 days)
+
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const recentVideos = userVideos.filter(video => 
+
+    const recentVideos = userVideos.filter(video =>
       video.createdAt && new Date(video.createdAt) >= thirtyDaysAgo
     );
-    
-    // Category performance
+
     const categoryStats = userVideos.reduce((stats, video) => {
       const category = video.category || 'Uncategorized';
       if (!stats[category]) {
@@ -643,7 +640,7 @@ export class JsonStorage {
       stats[category].videos += 1;
       return stats;
     }, {} as Record<string, { views: number; videos: number }>);
-    
+
     return {
       overview: {
         totalVideos: userVideos.length,
@@ -651,7 +648,7 @@ export class JsonStorage {
         totalLikes,
         totalComments,
         engagementRate: parseFloat(engagementRate.toFixed(2)),
-        subscriberCount: data.users.find(u => u.id === userId)?.subscriberCount || 0
+        subscriberCount: this.data.users.find(u => u.id === userId)?.subscriberCount || 0
       },
       topVideos: topVideos.map(video => ({
         id: video.id,
@@ -672,34 +669,34 @@ export class JsonStorage {
 
   private generateCreatorRecommendations(videos: Video[], engagementRate: number): string[] {
     const recommendations = [];
-    
+
     if (videos.length === 0) {
       recommendations.push("Upload your first video to start building your audience!");
     }
-    
+
     if (videos.length > 0 && videos.length < 5) {
       recommendations.push("Keep uploading! Consistency is key to growing your channel.");
     }
-    
+
     if (engagementRate < 2) {
       recommendations.push("Try creating more engaging titles and thumbnails to improve click-through rates.");
       recommendations.push("Ask questions in your videos to encourage more comments.");
     }
-    
+
     if (engagementRate > 5) {
       recommendations.push("Great engagement! Consider creating a series or consistent content theme.");
     }
-    
+
     const hasDescription = videos.some(video => video.description && video.description.length > 50);
     if (!hasDescription) {
       recommendations.push("Add detailed descriptions to your videos to improve discoverability.");
     }
-    
+
     const hasTags = videos.some(video => video.tags && video.tags.length > 0);
     if (!hasTags) {
       recommendations.push("Use relevant tags to help people find your content.");
     }
-    
+
     return recommendations;
   }
 }

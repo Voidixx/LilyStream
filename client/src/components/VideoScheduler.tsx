@@ -87,7 +87,7 @@ export function VideoScheduler({ videoFile, onSchedule, onCancel, isUploading }:
     form.setValue("scheduledTime", format(date, "HH:mm"));
   };
 
-  const onSubmit = (data: SchedulingForm) => {
+  const onSubmit = async (data: SchedulingForm) => {
     let scheduledAt: Date | undefined;
     
     if (data.scheduleType === "scheduled" && data.scheduledDate && data.scheduledTime) {
@@ -102,11 +102,15 @@ export function VideoScheduler({ videoFile, onSchedule, onCancel, isUploading }:
       }
     }
 
-    onSchedule({
+    // If scheduling for later, create the video with scheduled status
+    const videoData = {
       ...data,
       thumbnail: selectedThumbnail,
       scheduledAt,
-    });
+      status: data.scheduleType === "scheduled" ? "scheduled" : "published"
+    };
+
+    onSchedule(videoData);
   };
 
   const getPrivacyIcon = () => {
