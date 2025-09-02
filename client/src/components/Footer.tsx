@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
 import { Heart, Shield, FileText, HelpCircle, Mail, Globe } from "lucide-react";
 
-export default function Footer() {
+export function Footer() {
   const [, setLocation] = useLocation();
 
   const currentYear = new Date().getFullYear();
