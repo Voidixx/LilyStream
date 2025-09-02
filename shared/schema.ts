@@ -41,6 +41,11 @@ export const users = pgTable("users", {
   videoCount: integer("video_count").default(0),
   totalViews: integer("total_views").default(0),
   isVerified: boolean("is_verified").default(false),
+  isAdmin: boolean("is_admin").default(false),
+  isModerator: boolean("is_moderator").default(false),
+  isBanned: boolean("is_banned").default(false),
+  banReason: text("ban_reason"),
+  lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -74,6 +79,16 @@ export const videos = pgTable("videos", {
   clickThroughRate: integer("click_through_rate").default(0), // impressions to views ratio
   algorithmScore: integer("algorithm_score").default(100), // fair algorithm score
   impressions: integer("impressions").default(0),
+  // Moderation fields
+  isApproved: boolean("is_approved").default(true),
+  isBlocked: boolean("is_blocked").default(false),
+  blockReason: text("block_reason"),
+  contentRating: varchar("content_rating").default("general"),
+  isNSFW: boolean("is_nsfw").default(false),
+  moderationStatus: varchar("moderation_status").default("approved"),
+  moderationNotes: text("moderation_notes"),
+  moderatedBy: varchar("moderated_by"),
+  moderatedAt: timestamp("moderated_at"),
   userId: varchar("user_id").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -88,6 +103,14 @@ export const comments = pgTable("comments", {
   videoId: varchar("video_id").references(() => videos.id).notNull(),
   userId: varchar("user_id").references(() => users.id).notNull(),
   parentId: varchar("parent_id").references(() => comments.id),
+  // Moderation fields
+  isApproved: boolean("is_approved").default(true),
+  isBlocked: boolean("is_blocked").default(false),
+  blockReason: text("block_reason"),
+  isSpam: boolean("is_spam").default(false),
+  moderationStatus: varchar("moderation_status").default("approved"),
+  moderatedBy: varchar("moderated_by"),
+  moderatedAt: timestamp("moderated_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
