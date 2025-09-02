@@ -6,7 +6,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, requireAuth } from "./auth";
 import { insertVideoSchema, insertCommentSchema, insertPlaylistSchema } from "@shared/schema";
 
 // Configure multer for file uploads
@@ -87,7 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static(uploadDir));
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -163,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/videos', isAuthenticated, uploadVideo.single('video'), async (req: any, res) => {
+  app.post('/api/videos', requireAuth, uploadVideo.single('video'), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "Video file is required" });
@@ -187,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/videos/:id/thumbnail', isAuthenticated, uploadThumbnail.single('thumbnail'), async (req: any, res) => {
+  app.post('/api/videos/:id/thumbnail', requireAuth, uploadThumbnail.single('thumbnail'), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "Thumbnail file is required" });
@@ -211,7 +211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/videos/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/videos/:id', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const video = await storage.getVideo(req.params.id);
@@ -247,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Like/dislike routes
-  app.post('/api/videos/:id/like', isAuthenticated, async (req: any, res) => {
+  app.post('/api/videos/:id/like', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { type } = req.body; // 'like' or 'dislike'
@@ -265,7 +265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/videos/:id/like-status', isAuthenticated, async (req: any, res) => {
+  app.get('/api/videos/:id/like-status', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const like = await storage.getUserLike(userId, req.params.id);
@@ -305,7 +305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/videos/:id/comments', isAuthenticated, async (req: any, res) => {
+  app.post('/api/videos/:id/comments', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const commentData = {
@@ -342,7 +342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/comments/:id/like', isAuthenticated, async (req: any, res) => {
+  app.post('/api/comments/:id/like', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { type } = req.body;
@@ -358,7 +358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Video progress routes
-  app.post('/api/videos/:id/progress', isAuthenticated, async (req: any, res) => {
+  app.post('/api/videos/:id/progress', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { progress, completed } = req.body;
@@ -371,7 +371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/videos/:id/progress', isAuthenticated, async (req: any, res) => {
+  app.get('/api/videos/:id/progress', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const progress = await storage.getVideoProgress(userId, req.params.id);
@@ -384,7 +384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Playlist routes
-  app.get('/api/playlists', isAuthenticated, async (req: any, res) => {
+  app.get('/api/playlists', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const playlists = await storage.getPlaylists(userId);
@@ -396,7 +396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/playlists', isAuthenticated, async (req: any, res) => {
+  app.post('/api/playlists', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const playlistData = {

@@ -6,8 +6,14 @@ import {
   playlists,
   playlistVideos,
   videoProgress,
+  subscriptions,
+  notifications,
+  uploadSessions,
+  algorithmData,
+  categories,
   type User,
-  type UpsertUser,
+  type InsertUser,
+  type RegisterUser,
   type Video,
   type InsertVideo,
   type Comment,
@@ -16,14 +22,22 @@ import {
   type InsertPlaylist,
   type Like,
   type VideoProgress,
+  type Subscription,
+  type Notification,
+  type UploadSession,
+  type AlgorithmData,
+  type Category,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 // Interface for storage operations
 export interface IStorage {
-  // User operations - mandatory for Replit Auth
+  // User operations - custom auth
   getUser(id: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: RegisterUser): Promise<User>;
+  updateUser(id: string, updates: Partial<InsertUser>): Promise<User | undefined>;
   
   // Video operations
   createVideo(video: InsertVideo): Promise<Video>;
@@ -66,29 +80,50 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
-    const existingUser = Array.from(this.users.values()).find(u => u.id === userData.id);
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(u => u.username === username);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(u => u.email === email);
+  }
+
+  async createUser(userData: RegisterUser): Promise<User> {
+    const user: User = {
+      id: randomUUID(),
+      username: userData.username,
+      email: userData.email,
+      password: userData.password,
+      firstName: userData.firstName || null,
+      lastName: userData.lastName || null,
+      displayName: userData.displayName || userData.username,
+      profileImageUrl: null,
+      bannerImageUrl: null,
+      bio: null,
+      location: null,
+      website: null,
+      subscriberCount: 0,
+      videoCount: 0,
+      totalViews: 0,
+      isVerified: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.users.set(user.id, user);
+    return user;
+  }
+
+  async updateUser(id: string, updates: Partial<InsertUser>): Promise<User | undefined> {
+    const existingUser = this.users.get(id);
+    if (!existingUser) return undefined;
     
-    if (existingUser) {
-      const updatedUser: User = {
-        ...existingUser,
-        ...userData,
-        updatedAt: new Date(),
-      };
-      this.users.set(existingUser.id!, updatedUser);
-      return updatedUser;
-    } else {
-      const newUser: User = {
-        id: randomUUID(),
-        bio: null,
-        subscriberCount: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        ...userData,
-      };
-      this.users.set(newUser.id!, newUser);
-      return newUser;
-    }
+    const updatedUser: User = {
+      ...existingUser,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.users.set(existingUser.id, updatedUser);
+    return updatedUser;
   }
 
   // Video operations
@@ -98,11 +133,21 @@ export class MemStorage implements IStorage {
       views: 0,
       likes: 0,
       dislikes: 0,
+      comments: 0,
+      shares: 0,
+      engagementRate: 0,
+      watchTime: 0,
+      avgWatchTime: 0,
+      retentionRate: 100,
+      clickThroughRate: 0,
+      algorithmScore: 100,
+      impressions: 0,
+      publishedAt: videoData.status === 'published' ? new Date() : null,
       createdAt: new Date(),
       updatedAt: new Date(),
       ...videoData,
     };
-    this.videos.set(video.id!, video);
+    this.videos.set(video.id, video);
     return video;
   }
 
